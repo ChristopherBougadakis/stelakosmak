@@ -265,6 +265,27 @@ footer .bal{font-family:Impact,sans-serif;color:#ff2e63;font-size:24px;margin-to
 @keyframes ring{to{width:160vmax;height:160vmax;opacity:0;border-width:2px;}}
 #ambush .rock{position:absolute;bottom:8%;font-family:Impact,sans-serif;font-size:clamp(30px,9vw,90px);color:#fff;-webkit-text-stroke:3px #000;}
 
+/* GAREN ULT — Demacian Justice slams the screen */
+#garen-ult{position:fixed;inset:0;z-index:9720;display:none;align-items:center;justify-content:center;pointer-events:none;overflow:hidden;}
+#garen-ult.on{display:flex;}
+#garen-ult .flash{position:absolute;inset:0;background:#fff;animation:gflash .6s ease-out;}
+#garen-ult .beam{position:absolute;top:0;left:50%;width:34vw;height:100vh;transform:translateX(-50%);
+  background:linear-gradient(to bottom,rgba(255,255,180,0),rgba(255,238,90,.92) 55%,#fff);filter:blur(8px);animation:gbeam .9s ease-out;}
+#garen-ult .sword{position:absolute;font-size:78vmin;line-height:.9;filter:drop-shadow(0 0 40px gold) drop-shadow(0 0 12px #fff);
+  animation:gslam .55s cubic-bezier(.5,0,.3,1.25);}
+#garen-ult .txt{position:absolute;top:6%;font-family:Impact,sans-serif;font-size:clamp(46px,13vw,180px);color:#ffe600;
+  -webkit-text-stroke:5px #000;text-shadow:0 0 40px #ff0;animation:strobe .14s steps(2) infinite;}
+#garen-ult .gif{position:absolute;bottom:5%;width:44vmin;height:44vmin;background:var(--gif-garen-spin) center/contain no-repeat;animation:spin .7s linear infinite;}
+@keyframes gslam{0%{transform:translateY(-120vh) scale(1.1);opacity:0;}55%{transform:translateY(0);opacity:1;}70%{transform:translateY(-5vh);}100%{transform:translateY(0) scale(1.05);}}
+@keyframes gbeam{0%{opacity:0;transform:translateX(-50%) scaleY(.15);}40%{opacity:1;transform:translateX(-50%) scaleY(1);}100%{opacity:0;}}
+@keyframes gflash{0%{opacity:0;}8%{opacity:.95;}100%{opacity:0;}}
+
+/* MALZAHAR 3-SECOND HARD STUN — freeze + lock the whole site */
+body.stunned #wrapper{filter:grayscale(.45) brightness(.5) blur(1px) !important;pointer-events:none !important;}
+body.stunned #wrapper *{animation-play-state:paused !important;}
+body.stunned .marquee .track{animation-play-state:paused !important;}
+body.stunned #fx-swarm,body.stunned #fx-rain,body.stunned #fx-words{filter:grayscale(.6) brightness(.55);}
+
 /* MALZAHAR SUPPRESS */
 #suppress{position:fixed;inset:0;z-index:9750;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;
   background:rgba(40,0,60,.82);text-align:center;}
@@ -296,6 +317,33 @@ footer .bal{font-family:Impact,sans-serif;color:#ff2e63;font-size:24px;margin-to
 #ctxmenu.on{display:block;}
 #ctxmenu div{padding:8px 14px;cursor:pointer;color:#fff;border-bottom:1px solid #ffffff14;}
 #ctxmenu div:hover{background:#00e5ff;color:#000;}
+
+/* ===================== RESPONSIVE / MOBILE ===================== */
+.slip{max-width:min(440px,94vw);}
+.captcha{max-width:min(380px,92vw);}
+.bsod{max-width:min(600px,94vw);}
+@media (pointer:coarse){ #cursor{display:none;} }      /* no fake cursor on touch devices */
+@media (max-width:600px){
+  section{padding:48px 12px;}
+  .section-title{font-size:clamp(22px,7vw,40px);margin-bottom:18px;}
+  #hero h1{font-size:clamp(40px,15vw,80px);}
+  #hero .tag{font-size:clamp(14px,4.5vw,22px);}
+  .marquee .track{font-size:18px;}
+  .marquee span{padding:0 16px;}
+  .cards,.quotes{grid-template-columns:1fr;}
+  #depthHUD{font-size:10px;padding:3px 6px;}
+  .rail{font-size:13px;padding:8px 10px;}
+  #panic{left:8px;bottom:8px;}
+  #mute{left:auto;right:8px;bottom:8px;}
+  .toast-wrap{bottom:54px;width:min(82vw,260px);}
+  .odds td{padding:8px 6px;font-size:clamp(12px,3.4vw,16px);}
+  .patch{font-size:12px;}
+  #garen-ult .sword{font-size:92vmin;}
+}
+@media (max-width:380px){
+  #hero h1{font-size:34px;}
+  .marquee .track{font-size:15px;}
+}
 </style>
 </head>
 <body>
@@ -477,6 +525,14 @@ footer .bal{font-family:Impact,sans-serif;color:#ff2e63;font-size:24px;margin-to
 
 <div id="ambush"><div class="ring"></div><div class="gif">🪨</div><div class="rock impact">ROCK SOLID</div></div>
 
+<div id="garen-ult">
+  <div class="flash"></div>
+  <div class="beam"></div>
+  <div class="sword">⚔️</div>
+  <div class="txt impact">DEMACIA</div>
+  <div class="gif"></div>
+</div>
+
 <div id="suppress">
   <div class="ring"></div>
   <h2 class="impact">MALZAHAR HAS SUPPRESSED YOU</h2>
@@ -511,10 +567,16 @@ const GIF_MALZ_FLASH  = 'malzahar.gif';        // Malzahar Void FLASH R GIF (cur
 
 /* ---- AUDIO (champion voice-line .mp3 files; sit next to this HTML) ----
    Empty '' => a synthesized stand-in voice plays instead, so audio always works. */
-const AUD_GAREN     = 'garen-voice.mp3';      // Garen "DEMACIA!"  -- SWAP to any .mp3 (backup: garen-voice2.mp3)
-const AUD_MALPHITE  = 'malphite-voice.mp3';   // Malphite "Rock solid"  -- SWAP to any .mp3
-const AUD_MALZAHAR  = '';                      // SWAP ME -> Malzahar voice line (empty = synth void sound)
-const AUD_DRONE     = '';                      // SWAP ME -> optional ambient drone sample (else built-in oscillators)
+/* A RANDOM voice line is picked from each champion's list on every trigger.
+   Add/remove freely -- just drop the .mp3 next to this HTML and list its name. */
+const VOICES = {
+  garen: ['garen-voice.mp3','garen-voice2.mp3','garen-line-2.mp3','garen-line-3.mp3','garen-line-5.mp3',
+          'garen-line-6.mp3','garen-line-7.mp3','garen-line-8.mp3','garen-line-9.mp3','garen-line-10.mp3',
+          'garen-line-11.mp3','garen-line-13.mp3'],                                  // SWAP ME -> Garen voice lines
+  malphite: ['malphite-voice.mp3','malph-line-1.mp3','malph-line-3.mp3','malph-line-4.mp3','malph-line-7.mp3',
+             'malph-line-8.mp3','malph-line-9.mp3','malph-line-10.mp3','malph-line-11.mp3'],  // SWAP ME -> Malphite voice lines
+  malzahar: []                                                                       // empty => synth void sound
+};
 
 /* ---- YOUR LOCAL BRAINROT IMAGES (the BRAINROT/ folder) ----
    Used EXTREMELY RANDOMLY across swarm / popups / rain / captcha / background.
@@ -591,18 +653,18 @@ let bassDropped=false, lastMqDepth=-1;
 /* ============================================================ AUDIO ENGINE */
 let ctx=null, masterGain=null, comp=null, makeup=null, droneBus=null, lowpass=null, panner=null;
 let bands=[], subOsc=null, subGain=null;
-const buffers={garen:null,malphite:null,malzahar:null};
+const buffers={garen:[],malphite:[],malzahar:[]};
 const voiceCooldown={garen:0,malphite:0,malzahar:0};
 const BAND_FREQS=[55,110,165,220,330];          // 5 layered drones, low->high
 let schedTimer=null, nextNoteTime=0, beatStep=0;
 
-function targetMaster(){ return muted?0.0001:1.1; }   // LOUD
+function targetMaster(){ return muted?0.0001:1.6; }   // AS LOUD AS POSSIBLE
 
 function buildAudioGraph(){
   masterGain = ctx.createGain();  masterGain.gain.value = targetMaster();
-  comp = ctx.createDynamicsCompressor();   // brickwall limiter so we can push hot without nasty clipping
-  comp.threshold.value=-6; comp.ratio.value=20; comp.attack.value=.003; comp.release.value=.25;
-  makeup = ctx.createGain(); makeup.gain.value=2.0;   // makeup gain AFTER the limiter = much louder
+  comp = ctx.createDynamicsCompressor();   // brickwall limiter: push everything hot, it catches the peaks
+  comp.threshold.value=-10; comp.ratio.value=20; comp.attack.value=.002; comp.release.value=.2;
+  makeup = ctx.createGain(); makeup.gain.value=3.2;   // big makeup gain AFTER the limiter = MAX loudness
   masterGain.connect(comp); comp.connect(makeup); makeup.connect(ctx.destination);
 
   // drone bus: oscillators -> bandGain -> panner -> lowpass -> masterGain
@@ -645,7 +707,7 @@ function scheduler(){
   }
 }
 function scheduleNote(t,step){
-  const gainAmt=clamp((riftDepth-0.15)*0.6,0,0.4);
+  const gainAmt=clamp((riftDepth-0.15)*0.75,0,0.55);
   // arpeggio blip
   const arp=[330,392,494,587,659][step%5];
   const o=ctx.createOscillator(); o.type='square'; o.frequency.value=arp*(1+riftDepth*0.4);
@@ -660,7 +722,7 @@ function scheduleNote(t,step){
 function scheduleKick(t){
   const o=ctx.createOscillator(), g=ctx.createGain();
   o.frequency.setValueAtTime(150,t); o.frequency.exponentialRampToValueAtTime(45,t+0.12);
-  g.gain.setValueAtTime(0.9,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.16);
+  g.gain.setValueAtTime(1.2,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.16);
   o.connect(g); g.connect(masterGain); o.start(t); o.stop(t+0.18);
 }
 
@@ -672,33 +734,32 @@ function synthVoice(kind){
   if(kind==='garen'){ o.type='sawtooth'; o.frequency.setValueAtTime(180,t); o.frequency.linearRampToValueAtTime(90,t+0.5); f.frequency.value=700; }
   else if(kind==='malphite'){ o.type='square'; o.frequency.setValueAtTime(70,t); o.frequency.linearRampToValueAtTime(50,t+0.6); f.frequency.value=300; }
   else { o.type='sine'; o.frequency.setValueAtTime(300,t); o.frequency.exponentialRampToValueAtTime(900,t+0.4); f.frequency.value=1200; }
-  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.9,t+0.04);
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(1.2,t+0.04);
   g.gain.exponentialRampToValueAtTime(0.0001,t+0.7);
   o.connect(f); f.connect(g); g.connect(masterGain); o.start(t); o.stop(t+0.75);
 }
 function playVoice(kind, rate){
   if(!ctx||!audioUnlocked) return;
   const now=ctx.currentTime;
-  if(now - (voiceCooldown[kind]||0) < 0.6) return;   // cooldown so flick-scroll fires once
+  if(now - (voiceCooldown[kind]||0) < 0.55) return;   // cooldown so flick-scroll fires once
   voiceCooldown[kind]=now;
-  const buf=buffers[kind];
-  if(buf){
+  const arr=buffers[kind];
+  if(arr && arr.length){
+    const buf=arr[Math.floor(Math.random()*arr.length)];   // RANDOM line each time
     const s=ctx.createBufferSource(); s.buffer=buf;
-    s.playbackRate.value = rate || (0.7+riftDepth*1.2);    // chipmunk shallow / demon deep
-    const g=ctx.createGain(); g.gain.value=1.8;            // LOUD voice lines
+    s.playbackRate.value = rate || (0.78+riftDepth*1.0);    // chipmunk shallow / demon deep
+    const g=ctx.createGain(); g.gain.value=2.6;             // LOUD voice lines
     s.connect(g); g.connect(masterGain); s.start();
   } else {
     synthVoice(kind);
   }
 }
 async function loadVoices(){
-  const map={garen:AUD_GAREN,malphite:AUD_MALPHITE,malzahar:AUD_MALZAHAR};
-  for(const k in map){
-    if(!map[k]) continue;
-    try{
-      const r=await fetch(map[k]); const ab=await r.arrayBuffer();
-      buffers[k]=await ctx.decodeAudioData(ab);
-    }catch(e){ /* leave null -> synth fallback */ }
+  for(const k in VOICES){
+    for(const url of VOICES[k]){
+      try{ const r=await fetch(url); const ab=await r.arrayBuffer(); buffers[k].push(await ctx.decodeAudioData(ab)); }
+      catch(e){ /* skip missing/bad file -> synth fallback if none load */ }
+    }
   }
 }
 function blip(){
@@ -730,14 +791,14 @@ function audioFrame(){
   bands.forEach((b,i)=>{
     const center=i/(bands.length-1);
     const w=clamp(1-Math.abs(riftDepth-center)*2.2,0,1);
-    b.g.gain.setTargetAtTime(Math.max(0.0001,w*0.26), t, 0.12);
+    b.g.gain.setTargetAtTime(Math.max(0.0001,w*0.32), t, 0.12);
   });
   // lowpass opens with depth; Q spikes on scroll velocity
   const cutoff=clamp(200*Math.pow(120,riftDepth),120,Math.min(20000,ctx.sampleRate/2-500));
   lowpass.frequency.setTargetAtTime(cutoff,t,0.1);
   lowpass.Q.setTargetAtTime(clamp(1+scrollVel*0.4,1,16),t,0.08);
   // sub bass rises with depth
-  subGain.gain.setTargetAtTime(Math.max(0.0001,riftDepth*0.34),t,0.15);
+  subGain.gain.setTargetAtTime(Math.max(0.0001,riftDepth*0.45),t,0.15);
   subOsc.frequency.setTargetAtTime(40*(1+riftDepth),t,0.2);
 }
 
@@ -795,8 +856,9 @@ function startChaos(){
   setInterval(maybeToast, 4200);
   setInterval(maybeAmbush, rndi(9000,16000));
   setInterval(garenRoamHop, 2600);
+  setInterval(()=>{ if(started && riftDepth>0.12 && !suppressActive && Math.random()<0.6) garenUlt(); }, rndi(11000,17000));
   startGunga();
-  flashBig('DEMACIA!');
+  setTimeout(garenUlt, 1100);   // SEE the Garen ult right after entering
 }
 
 /* ============================================================ riftDepth rAF */
@@ -830,9 +892,8 @@ function scrollLoop(){
   requestAnimationFrame(scrollLoop);
 }
 function doMeltdown(){
-  bassDrop(); flashBig('DEMACIAAA');
-  document.body.classList.add('demacia-quake','crunch');
-  setTimeout(()=>document.body.classList.remove('demacia-quake'),1400);
+  bassDrop(); garenUlt();                       // GAREN ULT on the bass drop
+  document.body.classList.add('crunch');
   setTimeout(()=>document.body.classList.remove('crunch'),900);
   spawnPopup('FATAL: GOLIATH error — too much DEMACIA. OPAP still charged you -20.');
 }
@@ -903,7 +964,7 @@ function maybeToast(){ if(started && riftDepth>0.12) toast(); }
 
 /* ============================================================ SWARM (images/gifs) */
 function maybeSwarm(){
-  if(!started) return;
+  if(!started || suppressActive) return;
   const layer=$('#fx-swarm');
   const want = Math.max(6, Math.floor(riftDepth*MAX_SWARM));   // always a crowd, bigger when deeper
   if(layer.children.length>=want) { // recycle oldest sometimes for churn
@@ -916,7 +977,8 @@ function maybeSwarm(){
     const url = useGif ? champGif(pick([GIF_GAREN_SPIN,GIF_MALPH_FLASH,GIF_MALZ_FLASH])) : randImg();
     const img=document.createElement('img'); img.className='swarm-item brainrot';
     img.src = url || randImg(); if(!img.getAttribute('src')) continue;
-    const size=rnd(160,360)*(0.8+riftDepth*0.6);     // MUCH bigger, scales with depth
+    let size=rnd(160,360)*(0.8+riftDepth*0.6);                       // MUCH bigger, scales with depth
+    size=Math.min(size, Math.min(innerWidth,innerHeight)*0.78);     // ...but never bigger than the screen (mobile-safe)
     img.style.width=size+'px'; img.style.height=size+'px';
     img.style.left=rnd(-size*0.2,innerWidth-size*0.8)+'px'; img.style.top=rnd(-size*0.2,innerHeight-size*0.8)+'px';
     img.style.transform=`rotate(${rnd(-40,40)}deg) scale(${rnd(.85,1.25)})`;
@@ -929,7 +991,7 @@ function maybeSwarm(){
 
 /* ============================================================ RAIN (emoji/-20) */
 function maybeRain(){
-  if(!started || riftDepth<0.25) return;
+  if(!started || suppressActive || riftDepth<0.25) return;
   const layer=$('#fx-rain'), count=Math.random()<riftDepth?2:1;
   for(let i=0;i<count;i++){
     const el=document.createElement('div'); el.className='rain-item impact';
@@ -1035,7 +1097,7 @@ document.addEventListener('click',e=>{
 
 /* ============================================================ MALPHITE AMBUSH */
 function maybeAmbush(){
-  if(!started || riftDepth<0.3) return;
+  if(!started || suppressActive || riftDepth<0.3) return;
   const a=$('#ambush'); a.classList.add('on');
   document.body.classList.add('demacia-quake'); playVoice('malphite');
   const gif=a.querySelector('.gif');
@@ -1044,21 +1106,33 @@ function maybeAmbush(){
 }
 
 /* ============================================================ MALZAHAR SUPPRESS */
-let suppressActive=false, lastSuppress=0;
+let suppressActive=false, lastSuppress=0, suppressEnd=null;
 function triggerSuppress(){
   if(suppressActive || calm) return;
   if(performance.now()-lastSuppress<9000) return;
   lastSuppress=performance.now(); suppressActive=true;
   const s=$('#suppress'); s.classList.add('on'); playVoice('malzahar');
   setChampVisual(s.querySelector('.ring'), GIF_MALZ_FLASH, '');   // fresh random visual each suppress
+  // ===== HARD STUN: freeze + lock the entire website for 3 seconds =====
+  document.body.classList.add('stunned');
   document.documentElement.style.overflow='hidden'; document.body.style.overflow='hidden';
+  const swallow=e=>{ e.preventDefault(); e.stopPropagation(); };
+  const keyguard=e=>{ if(e.key==='Escape'){ end(); } else { e.preventDefault(); e.stopPropagation(); } };
+  window.addEventListener('wheel',swallow,{passive:false,capture:true});
+  window.addEventListener('touchmove',swallow,{passive:false,capture:true});
+  window.addEventListener('keydown',keyguard,true);
   const chan=$('#supp-chan'); chan.style.transition='none'; chan.style.width='100%';
-  requestAnimationFrame(()=>{ chan.style.transition='width 2.5s linear'; chan.style.width='0%'; });
-  let to;
-  const end=()=>{ s.classList.remove('on'); document.documentElement.style.overflow=''; document.body.style.overflow=''; suppressActive=false; clearTimeout(to); window.removeEventListener('keydown',esc); };
-  const esc=ev=>{ if(ev.key==='Escape') end(); };
-  to=setTimeout(end,2500);
-  window.addEventListener('keydown',esc);
+  requestAnimationFrame(()=>{ chan.style.transition='width 3s linear'; chan.style.width='0%'; });
+  let to, ended=false;
+  function end(){ if(ended) return; ended=true;
+    s.classList.remove('on'); document.body.classList.remove('stunned');
+    document.documentElement.style.overflow=''; document.body.style.overflow=''; suppressActive=false; suppressEnd=null; clearTimeout(to);
+    window.removeEventListener('wheel',swallow,{capture:true});
+    window.removeEventListener('touchmove',swallow,{capture:true});
+    window.removeEventListener('keydown',keyguard,true);
+  }
+  suppressEnd=end;
+  to=setTimeout(end,3000);   // 3-second stun, then auto-release (Esc/PANIC also releases)
 }
 // fast scroll while deep -> Malzahar suppresses you
 window.addEventListener('wheel',e=>{ if(started && riftDepth>0.55 && Math.abs(e.deltaY)>120 && Math.random()<0.25) triggerSuppress(); },{passive:true});
@@ -1066,8 +1140,10 @@ window.addEventListener('wheel',e=>{ if(started && riftDepth>0.55 && Math.abs(e.
 /* ============================================================ ROCK SOLID btns */
 $$('.rock-btn').forEach(b=>{
   b.addEventListener('mouseenter',()=>{ const k=b.dataset.vo; if(started){playVoice(k);} if(k==='malphite'){document.body.classList.add('demacia-quake'); setTimeout(()=>document.body.classList.remove('demacia-quake'),350);} });
-  b.addEventListener('click',e=>{ e.stopPropagation(); const k=b.dataset.vo; if(started)playVoice(k);
-    if(k==='garen') flashBig('DEMACIA!'); if(k==='malphite') maybeAmbush(); if(k==='malzahar') triggerSuppress(); });
+  b.addEventListener('click',e=>{ e.stopPropagation(); const k=b.dataset.vo;
+    if(k==='garen'){ garenUlt(); }
+    else if(k==='malphite'){ if(started)playVoice(k); maybeAmbush(); }
+    else if(k==='malzahar'){ if(started)playVoice(k); triggerSuppress(); } });
 });
 
 /* ============================================================ CAPTCHA */
@@ -1152,11 +1228,24 @@ function flashBig(txt){
   const s=$('#bigflash-txt'); s.textContent=txt; s.classList.remove('go'); void s.offsetWidth; s.classList.add('go');
 }
 
+/* GAREN ULT — Demacian Justice slams the screen (giant sword + light beam) */
+function garenUlt(){
+  if(suppressActive) return;
+  const g=$('#garen-ult'); g.classList.add('on');
+  g.querySelectorAll('.flash,.beam,.sword,.txt').forEach(el=>{ el.style.animation='none'; void el.offsetWidth; el.style.animation=''; });
+  document.body.classList.add('demacia-quake');
+  if(started) playVoice('garen',0.95);
+  flashBig('DEMACIAAA');
+  setTimeout(()=>{ g.classList.remove('on'); document.body.classList.remove('demacia-quake'); }, 1500);
+}
+
 /* ============================================================ RAILS */
 $('#panic').addEventListener('click',panic);
 function panic(){
+  if(suppressEnd) suppressEnd();                 // releases the stun + its input locks
   $('#fx-pop').innerHTML=''; $('#fx-swarm').innerHTML=''; $('#fx-rain').innerHTML=''; $('#fx-words').innerHTML='';
-  $('#suppress').classList.remove('on'); $('#ambush').classList.remove('on');
+  $('#suppress').classList.remove('on'); $('#ambush').classList.remove('on'); $('#garen-ult').classList.remove('on');
+  document.body.classList.remove('stunned','demacia-quake');
   document.documentElement.style.overflow=''; document.body.style.overflow=''; suppressActive=false;
   $('#ctxmenu').classList.remove('on');
   toast('GG. /ff');
