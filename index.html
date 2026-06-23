@@ -866,6 +866,8 @@ function audioFrame(){
 /* ============================================================ ENTER / GATE */
 function enterRift(){
   if(started) return; started=true;
+  // the gate literally says "ENABLE AUDIO" -> force-unmute, ignoring any stale persisted mute
+  muted=false; try{ localStorage.removeItem('brmute'); }catch(e){} $('#mute').textContent='🔊 ON';
   chaosStart=performance.now();     // stamp the clock at ENTER (defensive; startChaos re-stamps the same instant)
   document.body.classList.add('entered');
   if(calm) document.body.classList.add('calm');
@@ -1364,7 +1366,7 @@ function normalizePage(){
   if(escaped) return; escaped=true; rage=false;
   setChaosTimers(1);                                   // escaped => clears all spawners, no restart
   if(schedTimer){ clearInterval(schedTimer); schedTimer=null; }
-  muted=true; localStorage.setItem('brmute','1');
+  muted=true;   // session only -> do NOT persist, so it never silences a future ENTER
   if(ctx&&masterGain){ masterGain.gain.cancelScheduledValues(ctx.currentTime); masterGain.gain.setTargetAtTime(0.0001,ctx.currentTime,0.15); }
   panic();                                             // clears popups/overlays/stun
   document.body.classList.remove('demacia-quake','crunch','tier-meltdown','tier-fried','tier-spicy','rage','tier-calm');
@@ -1376,7 +1378,7 @@ function normalizePage(){
 function rageMode(){
   if(escaped) return; rage=true;
   document.body.classList.add('rage');
-  muted=false; localStorage.setItem('brmute','0'); $('#mute').textContent='🔊 ON';
+  muted=false; $('#mute').textContent='🔊 ON';   // session only
   if(ctx&&masterGain){ masterGain.gain.cancelScheduledValues(ctx.currentTime); masterGain.gain.setTargetAtTime(2.4,ctx.currentTime,0.1); }
   if(ctx&&makeup){ makeup.gain.setTargetAtTime(4.5,ctx.currentTime,0.1); }
   setChaosTimers(0.28);                                // EVERYTHING spawns way faster
