@@ -915,7 +915,7 @@ function armAudioUnlock(){
   };
   evs.forEach(ev=>window.addEventListener(ev,unlock,true));
 }
-enterRift();   // <-- start the brainrot immediately on load
+// enterRift() is invoked at the very END of the script (after all consts/lets are initialized)
 
 /* ============================================================ 99% LOADER */
 function runLoader(){   // quick ~1.5s cosmetic 99% gag; chaos is ALREADY running behind it
@@ -1439,6 +1439,9 @@ $('#pw-input').addEventListener('keydown',e=>{ e.stopPropagation(); if(e.key==='
 
 /* apply reduced-motion default */
 if(calm) document.body.classList.add('calm');
+
+/* START EVERYTHING — MUST be the last line so every const/let above is initialized first */
+enterRift();
 </script>
 </body>
 </html>
