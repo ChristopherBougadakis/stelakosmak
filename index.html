@@ -398,8 +398,8 @@ body.rage .rainbow-text{animation-duration:.4s,.12s !important;}
 <div id="gate">
   <h1 class="impact rainbow-text">⚔️ STELAKOSMAK'S RIFT OF -20 ⚔️</h1>
   <div class="sub">THE OFFICIAL UNOFFICIAL OPAP SHRINE OF MALPHITE FLASH R</div>
-  <button id="enter-btn">ENABLE AUDIO — ENTER THE RIFT</button>
-  <div class="sub" style="color:#ffe600">SOUND ON OR YOU'RE ATYXOS (unlucky)</div>
+  <button id="enter-btn">⚔️ WELCOME TO DEMACIA — ENTER ⚔️</button>
+  <div class="sub" style="color:#ffe600">🔊 CLICK TO ENTER &amp; TURN ON SOUND (or you're ATYXOS)</div>
   <p class="warn">⚠️ WARNING: THIS PAGE CONTAINS DEMACIA, flashing lights, loud Garen, rigged OPAP odds (-20),
     and aggressive GUNGAFOODS. Not affiliated with Riot, OPAP, or any winning bet ever placed.
     Clicking enables sound &amp; unleashes the KRATER.</p>
@@ -600,8 +600,6 @@ body.rage .rainbow-text{animation-duration:.4s,.12s !important;}
 <button class="rail" id="panic">🛑 PANIC / GG</button>
 <button class="rail" id="mute">🔊 ON</button>
 <button class="rail" id="exit-btn">🔑 EXIT CODE</button>
-<div id="snd-hint">🔊 TAP / CLICK ANYWHERE FOR SOUND</div>
-
 <!-- secret password dialog: MNA-3825 normalizes the page; anything else = rage mode -->
 <div id="pw-overlay">
   <div id="pw-box">
@@ -886,36 +884,25 @@ function goFullscreen(){   // can only fire from a user gesture
   const fn=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;
   if(fn){ try{ const p=fn.call(el); if(p&&p.catch) p.catch(()=>{}); }catch(e){} }
 }
-function enterRift(){   // AUTO-runs on load — no "enable sound" button needed
+function enterRift(){   // runs on the WELCOME-TO-DEMACIA button click — a user gesture, so audio is ALLOWED to start now
   if(started) return; started=true;
   muted=false; try{ localStorage.removeItem('brmute'); }catch(e){}
+  goFullscreen();
   chaosStart=performance.now();
   document.body.classList.add('entered');
   if(calm) document.body.classList.add('calm');
-  // build the audio graph right away; browsers keep it SUSPENDED until the first interaction
   try{
     ctx = new (window.AudioContext||window.webkitAudioContext)();
     buildAudioGraph(); loadVoices();
-    ctx.resume().then(()=>{ if(ctx.state==='running'){ audioUnlocked=true; blip(); } }).catch(()=>{});
+    ctx.resume().then(()=>{ audioUnlocked=true; blip(); }).catch(()=>{});   // resume inside the click -> sound plays immediately
   }catch(e){ console.warn('Audio unavailable:',e); }
   const gate=$('#gate'); if(gate) gate.style.display='none';
   startChaos();
   runLoader();
-  armAudioUnlock();
   flashBig('DEMACIA!');
 }
-// the FIRST click/tap/key anywhere resumes audio (browser autoplay policy) + goes fullscreen — no button
-function armAudioUnlock(){
-  const evs=['pointerdown','touchstart','keydown','click','mousemove','pointermove','wheel','scroll'];
-  const unlock=(e)=>{
-    if(ctx){ ctx.resume().then(()=>{ if(ctx.state==='running'){
-      if(!audioUnlocked){ audioUnlocked=true; blip(); const h=$('#snd-hint'); if(h) h.classList.add('gone'); }
-      evs.forEach(ev=>window.removeEventListener(ev,unlock,true)); } }).catch(()=>{}); }
-    if(e && (e.type==='pointerdown'||e.type==='touchstart'||e.type==='keydown'||e.type==='click')) goFullscreen();
-  };
-  evs.forEach(ev=>window.addEventListener(ev,unlock,true));
-}
-// enterRift() is invoked at the very END of the script (after all consts/lets are initialized)
+$('#enter-btn').addEventListener('click',enterRift);
+$('#calm-link').addEventListener('click',()=>{ calm=true; enterRift(); });
 
 /* ============================================================ 99% LOADER */
 function runLoader(){   // quick ~1.5s cosmetic 99% gag; chaos is ALREADY running behind it
@@ -1439,9 +1426,6 @@ $('#pw-input').addEventListener('keydown',e=>{ e.stopPropagation(); if(e.key==='
 
 /* apply reduced-motion default */
 if(calm) document.body.classList.add('calm');
-
-/* START EVERYTHING — MUST be the last line so every const/let above is initialized first */
-enterRift();
 </script>
 </body>
 </html>
