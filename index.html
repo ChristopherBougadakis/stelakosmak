@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- The <title> gets heckled by JS when you tab away. -->
+<title>STELAKOSMAK'S RIFT OF -20 // OPAP SHRINE OF MALPHITE FLASH R</title>
+<style>
+/* ============================================================================
+   ASSET REGISTRY  —  *** SWAP THESE ***  (everything you'd want to change)
+   These CSS variables hold the visual asset URLs. Their JS twins live at the
+   very top of the script block below. Leave a URL empty ('') to use the
+   built-in emoji / local-image fallback.
+   ============================================================================ */
+:root{
+  /* ---- CHAMPION GIFS (paste a .gif URL between the quotes) ---- */
+  --gif-garen-spin:   url('');   /* SWAP ME -> Garen spin-to-win GIF (cursor + roamer + swarm + captcha) */
+  --gif-malph-flash:  url('');   /* SWAP ME -> Malphite Unstoppable Force FLASH R GIF (ambush jumpscare)  */
+  --gif-malz-flash:   url('');   /* SWAP ME -> Malzahar Nether Grasp FLASH R GIF (cursor suppress + popups)*/
+
+  /* ---- TUNING KNOBS ---- */
+  --intensity: 0;                /* 0..1 master chaos knob, driven by scroll depth via JS */
+  --mx: 50vw; --my: 50vh;        /* live cursor position, written by JS */
+}
+
+/* ---------------------------------------------------------------- RESET */
+*{box-sizing:border-box;}
+html{scroll-behavior:auto;}
+body{
+  margin:0; padding:0; background:#05010a; color:#fff; overflow-x:hidden;
+  font-family:'Comic Sans MS','Comic Sans',cursive;
+  cursor:none;                    /* hidden so our custom Garen cursor takes over */
+}
+@media (pointer:coarse){ body{cursor:auto;} }  /* touch devices keep a real cursor */
+a{color:#0ff;}
+
+/* Impact for the SHOUTING, Comic Sans for the cringe */
+.impact{font-family:Impact,'Arial Black',sans-serif;letter-spacing:1px;
+  text-transform:uppercase;-webkit-text-stroke:2px #000;text-stroke:2px #000;}
+
+/* ====================================================== RAINBOW / DEEP FRY */
+@keyframes rainbow{0%{filter:hue-rotate(0deg);}100%{filter:hue-rotate(360deg);}}
+@keyframes strobe{0%,49%{opacity:1;}50%,100%{opacity:.55;}}
+@keyframes jitter{
+  0%{transform:translate(0,0) rotate(0deg);}
+  20%{transform:translate(-2px,1px) rotate(-1deg);}
+  40%{transform:translate(2px,-1px) rotate(1deg);}
+  60%{transform:translate(-1px,-2px) rotate(-1.5deg);}
+  80%{transform:translate(1px,2px) rotate(1.5deg);}
+  100%{transform:translate(0,0) rotate(0deg);}
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes spin-rev{to{transform:rotate(-360deg);}}
+@keyframes wobble{0%,100%{transform:skew(0deg);}50%{transform:skew(3deg,-2deg);}}
+
+.rainbow-text{
+  background:linear-gradient(90deg,#ff004d,#ff8a00,#ffe600,#00ff66,#00e5ff,#8a00ff,#ff004d);
+  background-size:400% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:rainbow 1.2s linear infinite, strobe .25s steps(2) infinite;
+  text-shadow:3px 0 #f0f,-3px 0 #0ff;  /* chromatic aberration */
+}
+
+/* Universal brainrot micro-jitter; amplitude grows with --intensity.
+   steps() timing => snappy/ugly, not smooth. */
+.brainrot{animation:jitter .18s steps(3) infinite;}
+
+/* Deep-fry wrapper: filter climbs with --intensity. NOT on body so fixed
+   overlays (cursor/popups/gate) don't inherit the crunch. */
+#wrapper{
+  filter:saturate(calc(1 + var(--intensity)*4)) contrast(calc(1 + var(--intensity)*1.6))
+         hue-rotate(calc(var(--intensity)*40deg));
+  transition:filter .2s linear;
+}
+body.crunch #wrapper{filter:saturate(6) contrast(3) hue-rotate(20deg) brightness(1.3) !important;}
+
+/* Scroll-tier escalation: classes toggled by JS off riftDepth */
+body.tier-meltdown{animation:invertflick .4s steps(2) infinite;}
+@keyframes invertflick{0%,80%{filter:none;}81%,100%{filter:invert(1) hue-rotate(180deg);}}
+
+/* DEMACIA bass-drop quake */
+@keyframes quake{
+  0%{transform:translate(0,0) rotate(0);}10%{transform:translate(-12px,8px) rotate(-1deg);}
+  20%{transform:translate(10px,-9px) rotate(1deg);}30%{transform:translate(-9px,-7px) rotate(-1deg);}
+  40%{transform:translate(11px,6px) rotate(1deg);}50%{transform:translate(-7px,9px) rotate(-1deg);}
+  60%{transform:translate(8px,-8px) rotate(1deg);}70%{transform:translate(-10px,5px);}
+  80%{transform:translate(9px,7px);}90%{transform:translate(-6px,-6px);}100%{transform:translate(0,0);}
+}
+body.demacia-quake{animation:quake .4s linear infinite;}
+
+/* ====================================================== ENTER / AUDIO GATE */
+#gate{
+  position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:18px;text-align:center;padding:24px;
+  background:radial-gradient(circle at 50% 30%,#1a0033,#05010a 70%);
+}
+#gate h1{font-size:clamp(28px,7vw,84px);margin:0;}
+#gate .warn{max-width:640px;color:#ffd34d;font-size:14px;line-height:1.5;opacity:.85;}
+@keyframes gateflash{
+  0%{box-shadow:0 0 0 0 #fff,0 0 30px #ff0;background:#ff004d;}
+  25%{box-shadow:0 0 0 6px #ff0;background:#00e5ff;}
+  50%{box-shadow:0 0 0 0 #0f0;background:#8a00ff;}
+  75%{box-shadow:0 0 0 6px #f0f;background:#ffe600;color:#000;}
+  100%{box-shadow:0 0 30px #fff;background:#ff004d;}
+}
+#enter-btn{
+  font-family:Impact,sans-serif;font-size:clamp(20px,4vw,40px);text-transform:uppercase;
+  padding:22px 40px;border:6px solid #fff;border-radius:8px;color:#fff;cursor:pointer;
+  animation:gateflash .35s steps(1) infinite;text-shadow:2px 2px #000;-webkit-text-stroke:1px #000;
+}
+#enter-btn:hover{transform:scale(1.06) rotate(-1deg);}
+#gate .sub{font-family:Impact,sans-serif;font-size:clamp(13px,2.5vw,18px);color:#0ff;letter-spacing:2px;}
+#calm-link{font-size:12px;color:#888;text-decoration:underline;cursor:pointer;background:none;border:none;}
+
+/* prefers-reduced-motion / calm mode: kill the seizure-grade stuff but keep theme */
+body.calm *{animation-duration:6s !important;}
+body.calm #wrapper{filter:none !important;}
+body.calm .rainbow-text{animation:rainbow 6s linear infinite;text-shadow:none;}
+body.calm .brainrot{animation:none;}
+@media (prefers-reduced-motion: reduce){
+  body:not(.force-chaos) .brainrot{animation:none;}
+}
+
+/* ====================================================== LOADER (99% troll) */
+#loader{
+  position:fixed;inset:0;z-index:9000;display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:20px;background:#070012;text-align:center;padding:24px;
+}
+#loader.show{display:flex;}
+#loader h2{font-family:Impact,sans-serif;font-size:clamp(20px,5vw,48px);margin:0;color:#ffe600;}
+.bar{width:min(80vw,560px);height:34px;border:3px solid #fff;border-radius:4px;overflow:hidden;background:#1a002b;}
+.bar > i{display:block;height:100%;width:0%;
+  background:linear-gradient(90deg,#ff004d,#ffe600,#00e5ff);transition:width .12s linear;}
+#loader .msg{font-family:Impact,sans-serif;color:#ff4d6d;min-height:24px;font-size:clamp(13px,3vw,20px);}
+#loader .pct{font-family:Impact,sans-serif;font-size:22px;color:#0f0;}
+.loader-actions{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;}
+.mini{font-family:Impact,sans-serif;padding:8px 14px;border:2px solid #fff;background:#222;color:#fff;cursor:pointer;border-radius:4px;}
+#skip-load{background:none;border:none;color:#666;text-decoration:underline;cursor:pointer;font-size:12px;}
+
+/* ====================================================== SECTIONS / LAYOUT */
+#wrapper{display:none;}            /* revealed after the gate */
+body.entered #wrapper{display:block;}
+section{position:relative;padding:70px 18px;border-bottom:4px dashed rgba(255,255,255,.15);overflow:hidden;}
+.section-title{font-family:Impact,sans-serif;font-size:clamp(26px,6vw,64px);text-align:center;margin:0 0 28px;}
+.wrap{max-width:1000px;margin:0 auto;position:relative;z-index:2;}
+
+/* HERO */
+#hero{min-height:96vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  background:radial-gradient(circle at 50% 40%,#26004d,#05010a 70%);}
+#hero h1{font-family:Impact,sans-serif;font-size:clamp(34px,9vw,120px);line-height:.95;margin:0 0 12px;}
+#hero .tag{font-size:clamp(16px,3.5vw,30px);margin:6px 0;}
+#hero .tag2{font-family:Impact,sans-serif;color:#0ff;font-size:clamp(14px,3vw,24px);}
+.scrolldown{margin-top:30px;font-family:Impact,sans-serif;color:#ffe600;animation:strobe .4s steps(2) infinite;}
+
+/* MARQUEES */
+.marquee{overflow:hidden;white-space:nowrap;border-top:3px solid #ff004d;border-bottom:3px solid #00e5ff;
+  background:#0a0018;margin:8px 0;}
+.marquee .track{display:inline-block;will-change:transform;font-family:Impact,sans-serif;font-size:26px;padding:8px 0;
+  animation-play-state:paused;}
+body.entered .marquee .track{animation-play-state:running;}
+@keyframes mq-l{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+@keyframes mq-r{from{transform:translateX(-50%);}to{transform:translateX(0);}}
+.marquee.l .track{animation:mq-l var(--sp,18s) linear infinite;}
+.marquee.r .track{animation:mq-r var(--sp,22s) linear infinite;}
+.marquee span{padding:0 26px;color:#fff;}
+.marquee .hot{color:#ff004d;}.marquee .cold{color:#00e5ff;}.marquee .gold{color:#ffe600;}
+
+/* ODDS BOARD */
+.odds{width:100%;border-collapse:collapse;font-family:Impact,sans-serif;}
+.odds td{border:2px solid #2a0a44;padding:12px 10px;font-size:clamp(13px,2.2vw,20px);}
+.odds .o{color:#ff2e63;text-align:right;font-size:clamp(16px,2.6vw,26px);}
+.toast-wrap{position:fixed;right:10px;bottom:64px;z-index:7000;display:flex;flex-direction:column;gap:8px;width:min(86vw,320px);pointer-events:none;}
+.toast{background:#11002a;border:2px solid #ff004d;border-radius:8px;padding:10px 12px;font-family:Impact,sans-serif;
+  font-size:14px;box-shadow:0 0 18px #ff004d88;transform:translateX(120%);transition:transform .35s;}
+.toast.in{transform:translateX(0);}
+
+/* CHAMPION SHRINE */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;}
+.card{background:linear-gradient(160deg,#1c0033,#3a0a1a);border:3px solid #ffe600;border-radius:12px;padding:18px;
+  box-shadow:0 0 24px #8a00ff66;}
+.card h3{font-family:Impact,sans-serif;font-size:clamp(18px,3vw,26px);margin:0 0 6px;}
+.card .stat{font-family:Impact,sans-serif;font-size:14px;border-top:1px dashed #ffffff33;padding:6px 0;display:flex;justify-content:space-between;}
+.rock-btn{margin-top:10px;width:100%;font-family:Impact,sans-serif;font-size:18px;padding:12px;border:3px solid #fff;
+  background:#5a5a5a;color:#fff;border-radius:6px;cursor:pointer;}
+.rock-btn:hover{background:#888;}
+
+/* TESTIMONIALS / PATCH */
+.quotes{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;}
+.quote{background:#10001f;border-left:6px solid #00e5ff;padding:14px;font-size:15px;line-height:1.4;}
+.quote .stars{color:#ffe600;font-size:18px;}
+.quote .by{display:block;margin-top:8px;color:#0ff;font-family:Impact,sans-serif;}
+.patch{background:#06140a;border:2px solid #00ff66;border-radius:8px;padding:16px;margin-top:24px;font-family:monospace;font-size:14px;line-height:1.7;}
+.patch b{color:#00ff66;}
+
+/* CAPTCHA */
+.captcha{max-width:380px;margin:0 auto;background:#fff;color:#000;border-radius:8px;overflow:hidden;font-family:Arial,sans-serif;box-shadow:0 0 30px #000;}
+.captcha .top{background:#4285f4;color:#fff;padding:12px;font-size:15px;}
+.cap-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;background:#fff;}
+.cap-grid .tile{aspect-ratio:1;background:#222 center/cover no-repeat;cursor:pointer;position:relative;border:3px solid transparent;}
+.cap-grid .tile.sel{border-color:#4285f4;}
+.cap-grid .tile .gif{position:absolute;inset:0;background-size:cover;background-position:center;animation:spin 1.1s linear infinite;}
+.captcha .bot{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;}
+.cap-verify{background:#4285f4;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;font-size:14px;}
+
+/* BETTING SLIP */
+.slip{max-width:440px;margin:24px auto 0;background:#08120a;border:3px solid #00ff66;border-radius:10px;padding:18px;font-family:Impact,sans-serif;}
+.slip h3{margin:0 0 10px;color:#00ff66;}
+.slip .row{display:flex;justify-content:space-between;border-bottom:1px dashed #ffffff22;padding:6px 0;font-size:15px;}
+.reels{display:flex;gap:8px;justify-content:center;margin:14px 0;}
+.reel{width:64px;height:80px;background:#000;border:3px solid #ffe600;border-radius:8px;overflow:hidden;position:relative;}
+.reel .strip{position:absolute;left:0;top:0;width:100%;font-size:46px;text-align:center;line-height:80px;transition:transform .1s;}
+.balance{font-size:20px;color:#ff2e63;text-align:center;margin:10px 0;}
+.bet-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;position:relative;min-height:60px;}
+.runaway{font-family:Impact,sans-serif;font-size:18px;padding:12px 20px;border:3px solid #fff;background:#ff004d;color:#fff;border-radius:6px;cursor:pointer;position:relative;transition:transform .12s;}
+.gunga{max-width:440px;margin:22px auto 0;background:#1a1200;border:2px solid #ffae00;border-radius:8px;padding:14px;font-family:Impact,sans-serif;}
+.gunga .eta{color:#ffae00;}
+
+/* SUPPRESS ZONE / ERRORS */
+#suppress-zone{background:radial-gradient(circle at 50% 50%,#2a0030,#05010a 75%);}
+.bsod{max-width:600px;margin:24px auto 0;background:#0000aa;color:#fff;font-family:monospace;padding:22px;font-size:14px;line-height:1.6;border-radius:4px;}
+.bsod .sad{font-size:46px;}
+
+/* FOOTER */
+footer{padding:40px 18px 120px;text-align:center;background:#02000a;}
+footer .fine{font-family:'Comic Sans MS',cursive;color:#ffe600;font-size:14px;max-width:680px;margin:0 auto;line-height:1.6;}
+footer .bal{font-family:Impact,sans-serif;color:#ff2e63;font-size:24px;margin-top:14px;}
+
+/* ====================================================== OVERLAY LAYERS */
+#cursor{position:fixed;left:0;top:0;width:84px;height:84px;z-index:10000;pointer-events:none;
+  transform:translate3d(var(--mx),var(--my),0) translate(-50%,-50%);
+  background:var(--gif-garen-spin) center/contain no-repeat;
+  display:flex;align-items:center;justify-content:center;font-size:34px;}
+#cursor.fallback{animation:spin 1s linear infinite;}
+.trail{position:fixed;z-index:9998;pointer-events:none;font-size:22px;transform:translate(-50%,-50%);
+  transition:opacity .5s, transform .5s;}
+#fx-rain,#fx-words,#fx-swarm,#fx-pop{position:fixed;inset:0;z-index:8000;pointer-events:none;overflow:hidden;}
+#fx-pop{z-index:9500;}              /* popups capture their own clicks via children */
+.rain-item{position:fixed;top:-60px;will-change:transform;pointer-events:none;}
+.flyword{position:fixed;font-family:Impact,sans-serif;white-space:nowrap;pointer-events:none;will-change:transform;
+  -webkit-text-stroke:2px #000;}
+.flyword.neg{color:#ff2e63;text-shadow:0 0 12px #ff004d;}
+.swarm-item{position:fixed;pointer-events:none;will-change:transform;border:2px solid #fff;border-radius:6px;
+  box-shadow:0 0 14px #000;object-fit:cover;}
+
+/* POPUPS (Win98/XP error dialogs) */
+.popup{position:fixed;z-index:9600;width:min(86vw,320px);background:#c0c0c0;color:#000;border:3px solid #fff;
+  border-right-color:#404040;border-bottom-color:#404040;box-shadow:6px 6px 0 #000;pointer-events:auto;
+  font-family:'Tahoma','Arial',sans-serif;font-size:13px;}
+.popup .tb{background:linear-gradient(90deg,#000080,#1084d0);color:#fff;font-weight:bold;padding:4px 6px;display:flex;justify-content:space-between;align-items:center;cursor:grab;}
+.popup .x{background:#c0c0c0;color:#000;border:2px outset #fff;width:20px;height:18px;line-height:14px;text-align:center;cursor:pointer;font-weight:bold;}
+.popup .body{padding:14px;display:flex;gap:12px;align-items:flex-start;}
+.popup .ico{font-size:34px;}
+.popup .thumb{width:96px;height:96px;object-fit:cover;border:1px solid #000;}
+.popup .btns{padding:0 14px 12px;display:flex;gap:8px;justify-content:flex-end;}
+.popup button.ok{font-family:Impact,sans-serif;border:2px outset #fff;background:#c0c0c0;padding:4px 14px;cursor:pointer;}
+.popup .giveup{font-size:10px;color:#555;text-decoration:underline;background:none;border:none;cursor:pointer;align-self:center;}
+
+/* MALPHITE FLASH-R AMBUSH */
+#ambush{position:fixed;inset:0;z-index:9700;display:none;align-items:center;justify-content:center;pointer-events:none;}
+#ambush.on{display:flex;}
+#ambush .gif{width:60vmin;height:60vmin;background:var(--gif-malph-flash) center/contain no-repeat;
+  display:flex;align-items:center;justify-content:center;font-size:30vmin;animation:slam .7s ease-out;}
+@keyframes slam{0%{transform:scale(4) rotate(-20deg);opacity:0;}30%{transform:scale(1) rotate(0);opacity:1;}100%{transform:scale(1.05);}}
+#ambush .ring{position:absolute;width:20px;height:20px;border:8px solid #fff;border-radius:50%;animation:ring .7s ease-out forwards;}
+@keyframes ring{to{width:160vmax;height:160vmax;opacity:0;border-width:2px;}}
+#ambush .rock{position:absolute;bottom:8%;font-family:Impact,sans-serif;font-size:clamp(30px,9vw,90px);color:#fff;-webkit-text-stroke:3px #000;}
+
+/* MALZAHAR SUPPRESS */
+#suppress{position:fixed;inset:0;z-index:9750;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  background:rgba(40,0,60,.82);text-align:center;}
+#suppress.on{display:flex;}
+#suppress .ring{width:120px;height:120px;border:10px dashed #b14dff;border-radius:50%;animation:spin 1.1s linear infinite;
+  background:var(--gif-malz-flash) center/cover no-repeat;}
+#suppress h2{font-family:Impact,sans-serif;color:#e0b3ff;font-size:clamp(22px,6vw,56px);margin:0;}
+#suppress .chan{width:min(70vw,420px);height:18px;border:3px solid #b14dff;border-radius:4px;overflow:hidden;background:#1a0030;}
+#suppress .chan > i{display:block;height:100%;width:100%;background:#b14dff;}
+#suppress small{color:#cdaad6;}
+
+/* Big center flash text (DEMACIA etc) */
+#bigflash{position:fixed;inset:0;z-index:9650;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+#bigflash span{font-family:Impact,sans-serif;font-size:clamp(50px,18vw,260px);color:#ffe600;-webkit-text-stroke:4px #000;
+  opacity:0;text-shadow:0 0 40px #ff0;}
+#bigflash span.go{animation:bf .9s ease-out;}
+@keyframes bf{0%{opacity:0;transform:scale(.2) rotate(-12deg);}30%{opacity:1;transform:scale(1.1);}100%{opacity:0;transform:scale(2);}}
+
+/* PERSISTENT RAILS (always usable, never jitter) */
+.rail{position:fixed;z-index:10001;font-family:Impact,sans-serif;border:3px solid #fff;border-radius:8px;cursor:pointer;
+  padding:10px 14px;font-size:15px;box-shadow:0 0 12px #000;}
+#panic{bottom:12px;left:12px;background:#ff004d;color:#fff;}
+#mute{bottom:12px;left:140px;background:#111;color:#0ff;}
+#depthHUD{top:8px;left:8px;z-index:10001;font-family:Impact,sans-serif;font-size:12px;color:#0f0;background:#000a;padding:4px 8px;border-radius:4px;pointer-events:none;}
+
+/* fake right-click menu */
+#ctxmenu{position:fixed;z-index:10002;display:none;background:#1a1a1a;border:2px solid #00e5ff;border-radius:6px;
+  font-family:Tahoma,sans-serif;font-size:13px;min-width:200px;overflow:hidden;box-shadow:0 0 18px #000;}
+#ctxmenu.on{display:block;}
+#ctxmenu div{padding:8px 14px;cursor:pointer;color:#fff;border-bottom:1px solid #ffffff14;}
+#ctxmenu div:hover{background:#00e5ff;color:#000;}
+</style>
+</head>
+<body>
+
+<!-- =========================================================== ENTER GATE -->
+<div id="gate">
+  <h1 class="impact rainbow-text">⚔️ STELAKOSMAK'S RIFT OF -20 ⚔️</h1>
+  <div class="sub">THE OFFICIAL UNOFFICIAL OPAP SHRINE OF MALPHITE FLASH R</div>
+  <button id="enter-btn">ENABLE AUDIO — ENTER THE RIFT</button>
+  <div class="sub" style="color:#ffe600">SOUND ON OR YOU'RE ATYXOS (unlucky)</div>
+  <p class="warn">⚠️ WARNING: THIS PAGE CONTAINS DEMACIA, flashing lights, loud Garen, rigged OPAP odds (-20),
+    and aggressive GUNGAFOODS. Not affiliated with Riot, OPAP, or any winning bet ever placed.
+    Clicking enables sound &amp; unleashes the KRATER.</p>
+  <button id="calm-link">i am ATYXOS &amp; sensitive → enter CALM MODE (less seizure, still -20)</button>
+</div>
+
+<!-- =============================================================== LOADER -->
+<div id="loader">
+  <h2 class="impact">LOADING INTO SUMMONER'S RIFT…</h2>
+  <div class="bar"><i id="load-fill"></i></div>
+  <div class="pct" id="load-pct">0%</div>
+  <div class="msg" id="load-msg">finding match…</div>
+  <div class="loader-actions">
+    <button class="mini" id="reconnect-btn">RECONNECT</button>
+    <button id="skip-load">skip (coward)</button>
+  </div>
+</div>
+
+<!-- ============================================================== CONTENT -->
+<div id="wrapper">
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="wrap">
+      <h1 class="brainrot"><span class="rainbow-text">DEMACIAAAAA</span></h1>
+      <p class="tag impact" style="color:#ffe600">WHERE EVERY PARLAY DIES AND <span class="rainbow-text">STELAKOSMAK</span> RESPAWNS AT -20</p>
+      <p class="tag2">SPIN TO WIN. SPIN TO LOSE. SPIN UNTIL THE GUNGAFOODS GETS COLD.</p>
+      <p class="tag2 brainrot">HERE COMES THE ROCKSLIDE — it's your bank account 🪨📉</p>
+      <div class="scrolldown impact">▼ SCROLL DEEPER INTO THE KRATER ▼<br>(it gets louder. and worse. -20)</div>
+    </div>
+  </section>
+
+  <div class="marquee l"><div class="track" id="mq-odds"></div></div>
+
+  <!-- ODDS BOARD -->
+  <section id="odds-sec">
+    <div class="wrap">
+      <h2 class="section-title rainbow-text">📊 LIVE OPAP ODDS — auto-degenerating to -20</h2>
+      <table class="odds" id="odds-table"></table>
+      <p class="impact" style="text-align:center;color:#888;margin-top:14px">all odds provided by OPAP™ • KRATER house edge: ∞% • ATYXOS guaranteed</p>
+    </div>
+  </section>
+
+  <!-- CHAMPION SHRINE -->
+  <section id="shrine">
+    <div class="wrap">
+      <h2 class="section-title rainbow-text">🛐 THE CHAMPION SHRINE</h2>
+      <div class="cards">
+        <div class="card brainrot">
+          <h3 class="rainbow-text">GAREN</h3>
+          <em>THE MIGHT OF DEMACIA AND THE WEIGHT OF YOUR DEBT</em>
+          <div class="stat"><span>Spin Radius</span><b>YES</b></div>
+          <div class="stat"><span>Voice Line Volume</span><b>DEMACIA</b></div>
+          <div class="stat"><span>Win Rate</span><b>ATYXOS%</b></div>
+          <button class="rock-btn" data-vo="garen">JUDGMENT (spin)</button>
+        </div>
+        <div class="card brainrot">
+          <h3 class="rainbow-text">MALPHITE</h3>
+          <em>THE SHARD OF THE MONOLITH AND OF YOUR DIGNITY</em>
+          <div class="stat"><span>Engage Range</span><b>FLASH+200</b></div>
+          <div class="stat"><span>Brain Cells Required</span><b>0</b></div>
+          <div class="stat"><span>Cooldown</span><b>your rent</b></div>
+          <button class="rock-btn" id="rock-solid" data-vo="malphite">ROCK SOLID 🪨</button>
+        </div>
+        <div class="card brainrot">
+          <h3 class="rainbow-text">MALZAHAR</h3>
+          <em>THE PROPHET OF THE VOID AND OF YOUR -20 BALANCE</em>
+          <div class="stat"><span>Suppress Duration</span><b>&gt; your bankroll</b></div>
+          <div class="stat"><span>Counterplay</span><b>cry</b></div>
+          <div class="stat"><span>R + Flash</span><b>illegal</b></div>
+          <button class="rock-btn" data-vo="malzahar">NETHER GRASP (R)</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="marquee r"><div class="track" id="mq-quotes"></div></div>
+
+  <!-- TESTIMONIALS + PATCH -->
+  <section id="testi">
+    <div class="wrap">
+      <h2 class="section-title rainbow-text">⭐ TESTIMONIALS FROM REAL DEGENERATES ⭐</h2>
+      <div class="quotes">
+        <div class="quote"><div class="stars">★★★★★</div>"I bet my GUNGAFOODS money on a KRATER 1v9. Now I AM the KRATER."<span class="by">— STELAKOSMAK, Iron IV</span></div>
+        <div class="quote"><div class="stars">★☆☆☆☆</div>"SOKIS CHAMP told me Malphite was unmissable. I am now -20 and unmissed."<span class="by">— ATYXOS, Verified Loser</span></div>
+        <div class="quote"><div class="stars">★★★★★</div>"DEMACIA changed my life. My wife changed her locks."<span class="by">— A Garen Main</span></div>
+        <div class="quote"><div class="stars">★★★★★</div>"GOLIATH said 'just one more parlay'. GOLIATH lied. OPAP charged me -20 anyway."<span class="by">— SOKIS CHAMP, Hardstuck</span></div>
+      </div>
+      <div class="patch">
+        <b>// PATCH 14.ATYXOS NOTES</b><br>
+        <b>Garen:</b> DEMACIA volume increased by 400%. Neighbors nerfed.<br>
+        <b>Malphite:</b> Flash R now also empties your OPAP account on impact (intended).<br>
+        <b>Malzahar:</b> Nether Grasp now suppresses your will to keep betting (QoL).<br>
+        <b>GUNGAFOODS:</b> gyros base price -20. Delivery time +∞.<br>
+        <b>STELAKOSMAK:</b> balance set to -20. This is now a permanent passive.<br>
+        <b>GOLIATH:</b> reworked. Still down. Still -20.
+      </div>
+    </div>
+  </section>
+
+  <!-- CAPTCHA + BETTING SLIP -->
+  <section id="bet-sec">
+    <div class="wrap">
+      <h2 class="section-title rainbow-text">🎰 PLACE YOUR BET (verify you are not a SOKIS CHAMP)</h2>
+
+      <div class="captcha" id="captcha">
+        <div class="top">Select all squares with <b>GAREN SPINNING</b></div>
+        <div class="cap-grid" id="cap-grid"></div>
+        <div class="bot"><span style="font-size:11px;color:#666">protected by reKRATERa</span>
+          <button class="cap-verify" id="cap-verify">VERIFY</button></div>
+      </div>
+
+      <div class="slip" id="slip" style="display:none">
+        <h3>🧾 BET SLIP: STELAKOSMAK to win the GUNGAFOODS LEAGUE</h3>
+        <div class="row"><span>Selection</span><span>MALPHITE FLASH R PENTAKILL</span></div>
+        <div class="row"><span>OPAP Odds</span><span style="color:#ff2e63">-20</span></div>
+        <div class="row"><span>KRATER house edge</span><span>∞%</span></div>
+        <div class="reels" id="reels"></div>
+        <div class="balance" id="balance">BALANCE: 420.69 €</div>
+        <div class="bet-btns" id="bet-btns">
+          <button class="runaway" id="place-bet">CASH OUT 💰</button>
+          <button class="runaway" id="claim" style="background:#00aa44">CLAIM -20 €</button>
+        </div>
+        <p style="text-align:center;font-size:12px;color:#888;margin-top:10px">fine print: KRATER house edge: ∞% • ATYXOS guaranteed • OPAP thanks you</p>
+      </div>
+
+      <div class="gunga">
+        🛵 GUNGAFOODS LIVE DELIVERY TRACKER<br>
+        <div class="bar" style="margin-top:8px"><i id="gunga-fill"></i></div>
+        <div class="eta" id="gunga-eta">ETA: 12 min</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUPPRESS ZONE / GOLIATH MELTDOWN -->
+  <section id="suppress-zone">
+    <div class="wrap">
+      <h2 class="section-title rainbow-text">💀 THE SUPPRESS ZONE — GOLIATH HAS FALLEN 💀</h2>
+      <p class="impact" style="text-align:center;color:#ffe600;font-size:clamp(16px,3vw,28px)">
+        YOU CROSSED 75% DEPTH. THE BASS DROPS. GAREN SCREAMS. THE KRATER OPENS.</p>
+      <div class="bsod brainrot">
+        <span class="sad">:(</span><br><br>
+        MALPHITE.SYS BSOD — HERE COMES THE ROCKSLIDE<br><br>
+        FATAL: GOLIATH error — too much DEMACIA. Console melted.<br>
+        OPAP still charged you -20.<br><br>
+        * Press any key to lose more LP. * STELAKOSMAK has disconnected (ATYXOS).<br>
+        Stop code: 0xDEMACIA_FLASH_R
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="fine rainbow-text impact" style="font-size:clamp(18px,4vw,30px)">GG • /ff at 15 • -20</div>
+    <p class="fine">© STELAKOSMAK ENTERPRISES — Not affiliated with OPAP, Riot, GUNGAFOODS, the KRATER,
+      or any winning bet ever placed. Play responsibly (you won't). SOKIS CHAMP is still throwing. GOLIATH is still down.</p>
+    <div class="bal impact">CURRENT BALANCE: -20 €</div>
+  </footer>
+
+</div><!-- /#wrapper -->
+
+<!-- =========================================================== OVERLAYS -->
+<div id="cursor"></div>
+<div id="fx-rain"></div>
+<div id="fx-words"></div>
+<div id="fx-swarm"></div>
+<div id="fx-pop"></div>
+<div id="bigflash"><span id="bigflash-txt"></span></div>
+
+<div id="ambush"><div class="ring"></div><div class="gif">🪨</div><div class="rock impact">ROCK SOLID</div></div>
+
+<div id="suppress">
+  <div class="ring"></div>
+  <h2 class="impact">MALZAHAR HAS SUPPRESSED YOU</h2>
+  <small class="impact">NETHER GRASP — YOU CANNOT MOVE, ATYXOS</small>
+  <div class="chan"><i id="supp-chan"></i></div>
+  <small>(press ESC to /ff)</small>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<div id="ctxmenu">
+  <div data-act="sauce">View Page Sauce</div>
+  <div data-act="copy">Copy STELAKOSMAK</div>
+  <div data-act="report">Report to OPAP</div>
+  <div data-act="ff">Surrender (/ff)</div>
+</div>
+
+<div id="depthHUD">DEPTH 0% • CALM</div>
+<button class="rail" id="panic">🛑 PANIC / GG</button>
+<button class="rail" id="mute">🔊 ON</button>
+
+<script>
+/* ============================================================================
+   ASSET REGISTRY  —  *** SWAP THESE ***  (JS twins of the CSS vars on top)
+   ----------------------------------------------------------------------------
+   GIFS / IMAGES: paste champion GIF URLs here. Empty '' => falls back to your
+   local folder images (below) and/or emoji, so it works offline right now.
+   ============================================================================ */
+const GIF_GAREN_SPIN  = 'garen-spin.gif';      // Garen spin-to-win GIF  (cursor/roamer/swarm/captcha)  -- SWAP to any .gif
+const GIF_MALPH_FLASH = 'malphite-flash.gif';  // Malphite Unstoppable Force FLASH R GIF (ambush jumpscare) -- SWAP to any .gif
+const GIF_MALZ_FLASH  = 'malzahar.gif';        // Malzahar Void FLASH R GIF (cursor suppress/popups)        -- SWAP to any .gif
+
+/* ---- AUDIO (champion voice-line .mp3 files; sit next to this HTML) ----
+   Empty '' => a synthesized stand-in voice plays instead, so audio always works. */
+const AUD_GAREN     = 'garen-voice.mp3';      // Garen "DEMACIA!"  -- SWAP to any .mp3 (backup: garen-voice2.mp3)
+const AUD_MALPHITE  = 'malphite-voice.mp3';   // Malphite "Rock solid"  -- SWAP to any .mp3
+const AUD_MALZAHAR  = '';                      // SWAP ME -> Malzahar voice line (empty = synth void sound)
+const AUD_DRONE     = '';                      // SWAP ME -> optional ambient drone sample (else built-in oscillators)
+
+/* ---- YOUR LOCAL BRAINROT IMAGES (the BRAINROT/ folder) ----
+   Used EXTREMELY RANDOMLY across swarm / popups / rain / captcha / background.
+   Never all at once — random subsets per wave. Add/remove filenames freely.   */
+const LOCAL_IMAGES = [
+  'IMG_20251004_130830_704.jpg',
+  'IMG_20260308_014302379.jpg',
+  'IMG_20260623_135153_326.jpg',
+  'IMG_20260623_135320_046.jpg',
+  'IMG_20260623_135327_731.jpg',
+  'IMG_20260623_135359_305.jpg',
+  'IMG_20260623_135612_636.jpg',
+  'Messenger_creation_946701892988372.jpg',
+  'SPOILER_410154104_725521022838701_2875711745770055851_n.png',
+  'Screenshot_20260623-140853.Messenger.png',
+  'fd552d5a4bf80630b4a485eb3ec579bc.png',
+  'image-32.png','image-34.png','image-38.png','image-412.png',
+  'image-43.png','image-44.png','image-45.png','image-54.png',
+  'received_1743534672834980.jpg'
+];
+
+/* ---- TUNING ---- */
+const WORDS = ['DEMACIA!','-20','ROCK SOLID','GUNGAFOODS','KRATER','STELAKOSMAK','ATYXOS','SOKIS CHAMP','GOLIATH','OPAP','SUPPRESSED','HERE COMES THE ROCKSLIDE'];
+const MAX_POPUPS = 12;
+const MAX_SWARM  = 44;     // big visible image crowd
+const DEPTH_THRESHOLD = 0.75;   // DEMACIA bass drop fires here
+const DODGE_LIMIT = 4;
+const BPM_BASE = 90, BPM_RANGE = 70;
+let   START_BALANCE = 420.69;
+
+/* ============================================================ small helpers */
+const $  = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+const rnd  = (a,b)=>a+Math.random()*(b-a);
+const rndi = (a,b)=>Math.floor(rnd(a,b+1));
+const pick = a=>a[rndi(0,a.length-1)];
+const clamp= (v,a,b)=>Math.max(a,Math.min(b,v));
+function randImg(){ return LOCAL_IMAGES.length ? encodeURI(pick(LOCAL_IMAGES)) : ''; }
+function champGif(slot){            // slot url, else random local image, else ''
+  return slot || randImg();
+}
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=rndi(0,i);[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+/* whether the user dropped local images in the BRAINROT/ folder */
+const HAVE_IMGS = LOCAL_IMAGES.length>0;
+/* pick a champion visual: explicit gif url  >  random LOCAL folder image  >  emoji */
+function setChampVisual(el, gifUrl, emoji){
+  if(gifUrl){ el.style.backgroundImage=`url('${gifUrl}')`; el.textContent=''; }
+  else if(HAVE_IMGS){ el.style.backgroundImage=`url('${randImg()}')`; el.textContent=''; }
+  else { el.style.backgroundImage='none'; el.textContent=emoji||''; }
+}
+
+/* wire the swap-able GIF urls into the CSS vars (so cursor/ambush/etc. show them).
+   Empty slot => fall back to a RANDOM local folder image so nothing is ever bare. */
+(function bindAssets(){
+  const r=document.documentElement.style;
+  const garen = GIF_GAREN_SPIN || randImg();
+  const malph = GIF_MALPH_FLASH || randImg();
+  const malz  = GIF_MALZ_FLASH  || randImg();
+  if(garen) r.setProperty('--gif-garen-spin', `url('${garen}')`);
+  if(malph) r.setProperty('--gif-malph-flash',`url('${malph}')`);
+  if(malz)  r.setProperty('--gif-malz-flash', `url('${malz}')`);
+  const c=$('#cursor');
+  if(!GIF_GAREN_SPIN){ c.classList.add('fallback'); if(!garen) c.textContent='⚔️'; }  // spin a local pic or ⚔️
+})();
+
+/* ============================================================ GLOBAL STATE */
+let started=false, audioUnlocked=false, muted=(localStorage.getItem('brmute')==='1');
+let calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+let riftDepth=0, scrollVel=0, lastScrollY=0;
+let mx=innerWidth/2, my=innerHeight/2, cx=mx, cy=my, lastFlick=0;
+let bassDropped=false, lastMqDepth=-1;
+
+/* ============================================================ AUDIO ENGINE */
+let ctx=null, masterGain=null, comp=null, makeup=null, droneBus=null, lowpass=null, panner=null;
+let bands=[], subOsc=null, subGain=null;
+const buffers={garen:null,malphite:null,malzahar:null};
+const voiceCooldown={garen:0,malphite:0,malzahar:0};
+const BAND_FREQS=[55,110,165,220,330];          // 5 layered drones, low->high
+let schedTimer=null, nextNoteTime=0, beatStep=0;
+
+function targetMaster(){ return muted?0.0001:1.1; }   // LOUD
+
+function buildAudioGraph(){
+  masterGain = ctx.createGain();  masterGain.gain.value = targetMaster();
+  comp = ctx.createDynamicsCompressor();   // brickwall limiter so we can push hot without nasty clipping
+  comp.threshold.value=-6; comp.ratio.value=20; comp.attack.value=.003; comp.release.value=.25;
+  makeup = ctx.createGain(); makeup.gain.value=2.0;   // makeup gain AFTER the limiter = much louder
+  masterGain.connect(comp); comp.connect(makeup); makeup.connect(ctx.destination);
+
+  // drone bus: oscillators -> bandGain -> panner -> lowpass -> masterGain
+  droneBus = ctx.createGain(); droneBus.gain.value=1;
+  panner = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+  lowpass = ctx.createBiquadFilter(); lowpass.type='lowpass';
+  lowpass.frequency.value=200; lowpass.Q.value=1;
+  if(panner){ droneBus.connect(panner); panner.connect(lowpass); } else { droneBus.connect(lowpass); }
+  lowpass.connect(masterGain);
+
+  bands = BAND_FREQS.map((f,i)=>{
+    const o=ctx.createOscillator(); o.type = i%2 ? 'sawtooth':'triangle';
+    o.frequency.value=f; o.detune.value = i*4;
+    const g=ctx.createGain(); g.gain.value=0.0001;
+    o.connect(g); g.connect(droneBus); o.start();
+    return {o,g,f};
+  });
+  // sub bass that rises with depth
+  subOsc=ctx.createOscillator(); subOsc.type='sine'; subOsc.frequency.value=40;
+  subGain=ctx.createGain(); subGain.gain.value=0.0001;
+  subOsc.connect(subGain); subGain.connect(masterGain); subOsc.start();
+
+  // seasick auto-pan LFO
+  if(panner){
+    const lfo=ctx.createOscillator(); lfo.frequency.value=0.15;
+    const lg=ctx.createGain(); lg.gain.value=0.6; lfo.connect(lg); lg.connect(panner.pan); lfo.start();
+  }
+  // OPAP beat scheduler (lookahead, NOT setTimeout-per-note)
+  nextNoteTime=ctx.currentTime+0.1;
+  if(schedTimer) clearInterval(schedTimer);
+  schedTimer=setInterval(scheduler,25);
+}
+
+function scheduler(){
+  if(!ctx) return;
+  const bpm=BPM_BASE+riftDepth*BPM_RANGE, spb=60/bpm;
+  while(nextNoteTime < ctx.currentTime + 0.1){
+    if(riftDepth>0.18) scheduleNote(nextNoteTime, beatStep);
+    beatStep=(beatStep+1)%8; nextNoteTime+=spb/2;   // 8th notes
+  }
+}
+function scheduleNote(t,step){
+  const gainAmt=clamp((riftDepth-0.15)*0.6,0,0.4);
+  // arpeggio blip
+  const arp=[330,392,494,587,659][step%5];
+  const o=ctx.createOscillator(); o.type='square'; o.frequency.value=arp*(1+riftDepth*0.4);
+  const g=ctx.createGain();
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(gainAmt,t+0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+0.16);
+  o.connect(g); g.connect(masterGain); o.start(t); o.stop(t+0.18);
+  // kick on the 1
+  if(step%4===0 && riftDepth>0.3) scheduleKick(t);
+}
+function scheduleKick(t){
+  const o=ctx.createOscillator(), g=ctx.createGain();
+  o.frequency.setValueAtTime(150,t); o.frequency.exponentialRampToValueAtTime(45,t+0.12);
+  g.gain.setValueAtTime(0.9,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.16);
+  o.connect(g); g.connect(masterGain); o.start(t); o.stop(t+0.18);
+}
+
+/* synthesized stand-in "voice" used when no MP3 url is set */
+function synthVoice(kind){
+  if(!ctx) return;
+  const t=ctx.currentTime, o=ctx.createOscillator(), g=ctx.createGain();
+  const f=ctx.createBiquadFilter(); f.type='bandpass';
+  if(kind==='garen'){ o.type='sawtooth'; o.frequency.setValueAtTime(180,t); o.frequency.linearRampToValueAtTime(90,t+0.5); f.frequency.value=700; }
+  else if(kind==='malphite'){ o.type='square'; o.frequency.setValueAtTime(70,t); o.frequency.linearRampToValueAtTime(50,t+0.6); f.frequency.value=300; }
+  else { o.type='sine'; o.frequency.setValueAtTime(300,t); o.frequency.exponentialRampToValueAtTime(900,t+0.4); f.frequency.value=1200; }
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.9,t+0.04);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+0.7);
+  o.connect(f); f.connect(g); g.connect(masterGain); o.start(t); o.stop(t+0.75);
+}
+function playVoice(kind, rate){
+  if(!ctx||!audioUnlocked) return;
+  const now=ctx.currentTime;
+  if(now - (voiceCooldown[kind]||0) < 0.6) return;   // cooldown so flick-scroll fires once
+  voiceCooldown[kind]=now;
+  const buf=buffers[kind];
+  if(buf){
+    const s=ctx.createBufferSource(); s.buffer=buf;
+    s.playbackRate.value = rate || (0.7+riftDepth*1.2);    // chipmunk shallow / demon deep
+    const g=ctx.createGain(); g.gain.value=1.8;            // LOUD voice lines
+    s.connect(g); g.connect(masterGain); s.start();
+  } else {
+    synthVoice(kind);
+  }
+}
+async function loadVoices(){
+  const map={garen:AUD_GAREN,malphite:AUD_MALPHITE,malzahar:AUD_MALZAHAR};
+  for(const k in map){
+    if(!map[k]) continue;
+    try{
+      const r=await fetch(map[k]); const ab=await r.arrayBuffer();
+      buffers[k]=await ctx.decodeAudioData(ab);
+    }catch(e){ /* leave null -> synth fallback */ }
+  }
+}
+function blip(){
+  if(!ctx) return; const t=ctx.currentTime, o=ctx.createOscillator(), g=ctx.createGain();
+  o.frequency.setValueAtTime(220,t); o.frequency.exponentialRampToValueAtTime(880,t+0.35);
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.5,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.4);
+  o.connect(g); g.connect(masterGain); o.start(t); o.stop(t+0.42);
+}
+function bassDrop(){
+  if(!ctx) return; const t=ctx.currentTime;
+  const o=ctx.createOscillator(), g=ctx.createGain();
+  o.type='sine'; o.frequency.setValueAtTime(120,t); o.frequency.exponentialRampToValueAtTime(30,t+1.2);
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.95,t+0.05); g.gain.exponentialRampToValueAtTime(0.0001,t+1.7);
+  o.connect(g); g.connect(masterGain); o.start(t); o.stop(t+1.8);
+  for(let i=0;i<8;i++) scheduleKick(t+0.18+i*0.16);
+  // sidechain duck then swell
+  masterGain.gain.cancelScheduledValues(t);
+  masterGain.gain.setValueAtTime(masterGain.gain.value,t);
+  masterGain.gain.linearRampToValueAtTime(muted?0.0001:0.2,t+0.05);
+  masterGain.gain.linearRampToValueAtTime(targetMaster(),t+1.3);
+  playVoice('garen',0.85);
+}
+
+/* update audio params from the smoothed riftDepth (called every frame) */
+function audioFrame(){
+  if(!ctx||!audioUnlocked) return;
+  const t=ctx.currentTime;
+  // band crossfade: triangular window centered on each band's depth slot
+  bands.forEach((b,i)=>{
+    const center=i/(bands.length-1);
+    const w=clamp(1-Math.abs(riftDepth-center)*2.2,0,1);
+    b.g.gain.setTargetAtTime(Math.max(0.0001,w*0.26), t, 0.12);
+  });
+  // lowpass opens with depth; Q spikes on scroll velocity
+  const cutoff=clamp(200*Math.pow(120,riftDepth),120,Math.min(20000,ctx.sampleRate/2-500));
+  lowpass.frequency.setTargetAtTime(cutoff,t,0.1);
+  lowpass.Q.setTargetAtTime(clamp(1+scrollVel*0.4,1,16),t,0.08);
+  // sub bass rises with depth
+  subGain.gain.setTargetAtTime(Math.max(0.0001,riftDepth*0.34),t,0.15);
+  subOsc.frequency.setTargetAtTime(40*(1+riftDepth),t,0.2);
+}
+
+/* ============================================================ ENTER / GATE */
+function enterRift(){
+  if(started) return; started=true;
+  document.body.classList.add('entered');
+  if(calm) document.body.classList.add('calm');
+  try{
+    ctx = new (window.AudioContext||window.webkitAudioContext)();
+    ctx.resume().then(()=>{ buildAudioGraph(); audioUnlocked=true; blip(); loadVoices(); flashBig('DEMACIA!'); });
+  }catch(e){ console.warn('Audio unavailable:',e); }
+  // hide gate
+  const gate=$('#gate'); gate.style.transition='opacity .5s'; gate.style.opacity='0';
+  setTimeout(()=>gate.style.display='none',500);
+  // run the trolling loader, which then reveals the site & starts loops
+  runLoader();
+}
+$('#enter-btn').addEventListener('click',enterRift);
+$('#calm-link').addEventListener('click',()=>{ calm=true; enterRift(); });
+
+/* ============================================================ 99% LOADER */
+function runLoader(){
+  const L=$('#loader'); L.classList.add('show');
+  const fill=$('#load-fill'), pct=$('#load-pct'), msg=$('#load-msg');
+  const resets=['ATYXOS — CONNECTION LOST. RECONNECTING… (-20 LP)',
+                'SOKIS CHAMP queue dodged (-20 LP)',
+                'STELAKOSMAK failed to load. KRATER too deep.'];
+  let p=0, loops=0, hanging=false;
+  const tick=()=>{
+    if(hanging) return;
+    p += p<70 ? rnd(2,6) : p<95 ? rnd(0.6,2) : 0.25;
+    if(p>=99){ p=99; hanging=true; msg.textContent='Waiting for STELAKOSMAK…';
+      setTimeout(()=>{
+        if(loops<2){ loops++; p=rnd(8,14); hanging=false; msg.textContent=pick(resets); msg.style.color='#ff2e63'; }
+        else { msg.textContent='whatever, just go in →'; finishLoader(); }
+      }, 1400);
+    }
+    fill.style.width=p+'%'; pct.textContent=Math.floor(p)+'%';
+  };
+  const iv=setInterval(()=>{ if(!$('#loader').classList.contains('show')){clearInterval(iv);return;} tick(); },120);
+  $('#reconnect-btn').onclick=()=>{ const b=$('#reconnect-btn'); b.style.transform=`translate(${rnd(-8,8)}px,${rnd(-6,6)}px) rotate(${rnd(-6,6)}deg)`;
+    setTimeout(()=>b.style.transform='',120); toast('RECONNECT button did nothing. -20 LP'); };
+  $('#skip-load').onclick=finishLoader;
+  function finishLoader(){ clearInterval(iv); L.classList.remove('show'); startChaos(); }
+}
+
+/* ============================================================ START CHAOS */
+function startChaos(){
+  buildMarquees(); buildOddsBoard(); buildCaptcha(); buildReels();
+  scrollLoop();           // rAF: depth + audio + visuals
+  setInterval(maybeSwarm, 420);
+  setInterval(maybeRain, 380);
+  setInterval(maybeFlyWord, 900);
+  setInterval(maybeToast, 4200);
+  setInterval(maybeAmbush, rndi(9000,16000));
+  setInterval(garenRoamHop, 2600);
+  startGunga();
+  flashBig('DEMACIA!');
+}
+
+/* ============================================================ riftDepth rAF */
+function scrollLoop(){
+  const maxScroll=Math.max(1, document.documentElement.scrollHeight - innerHeight);
+  const raw=clamp(window.scrollY/maxScroll,0,1);
+  scrollVel = scrollVel*0.8 + Math.abs(window.scrollY-lastScrollY)*0.05;
+  lastScrollY=window.scrollY;
+  riftDepth += (raw - riftDepth)*0.08;                 // one-pole smoothing
+  document.documentElement.style.setProperty('--intensity', riftDepth.toFixed(3));
+  // tiers
+  const b=document.body.classList;
+  b.toggle('tier-calm', riftDepth<0.3);
+  b.toggle('tier-spicy', riftDepth>=0.3&&riftDepth<0.6);
+  b.toggle('tier-fried', riftDepth>=0.6&&riftDepth<0.85);
+  b.toggle('tier-meltdown', riftDepth>=0.85 && !calm);
+  // HUD
+  const tier = riftDepth<0.3?'CALM':riftDepth<0.6?'SPICY':riftDepth<0.85?'FRIED':'MELTDOWN';
+  $('#depthHUD').textContent=`DEPTH ${Math.round(riftDepth*100)}% • ${tier} • -20`;
+  // marquee speed scales with depth (only re-touch DOM when depth meaningfully moves)
+  if(Math.abs(riftDepth-lastMqDepth)>0.03){
+    const sp=(22-riftDepth*16)+'s';
+    document.documentElement.style.setProperty('--mqspeed',sp);
+    $$('.marquee .track').forEach(t=>t.style.animationDuration=sp);
+    lastMqDepth=riftDepth;
+  }
+  // bass drop edge (hysteresis)
+  if(!bassDropped && riftDepth>DEPTH_THRESHOLD){ bassDropped=true; doMeltdown(); }
+  if(bassDropped && riftDepth<0.68) bassDropped=false;
+  audioFrame();
+  requestAnimationFrame(scrollLoop);
+}
+function doMeltdown(){
+  bassDrop(); flashBig('DEMACIAAA');
+  document.body.classList.add('demacia-quake','crunch');
+  setTimeout(()=>document.body.classList.remove('demacia-quake'),1400);
+  setTimeout(()=>document.body.classList.remove('crunch'),900);
+  spawnPopup('FATAL: GOLIATH error — too much DEMACIA. OPAP still charged you -20.');
+}
+
+/* ============================================================ CURSOR */
+window.addEventListener('pointermove',e=>{
+  mx=e.clientX; my=e.clientY;
+  const now=performance.now(), v=Math.hypot(e.movementX||0,e.movementY||0);
+  if(v>60 && now-lastFlick>700){ lastFlick=now; if(started) playVoice('garen'); spawnTrail(mx,my); }
+});
+function cursorLoop(){
+  cx += (mx-cx)*0.35; cy += (my-cy)*0.35;
+  const c=$('#cursor'); c.style.setProperty('--mx',cx+'px'); c.style.setProperty('--my',cy+'px');
+  requestAnimationFrame(cursorLoop);
+}
+cursorLoop();
+function spawnTrail(x,y){
+  const t=document.createElement('div'); t.className='trail'; t.textContent=pick(['⚔️','🪨','🟣','💀','-20']);
+  t.style.left=x+'px'; t.style.top=y+'px'; document.body.appendChild(t);
+  requestAnimationFrame(()=>{ t.style.opacity='0'; t.style.transform=`translate(-50%,-50%) translate(${rnd(-30,30)}px,${rnd(20,60)}px) scale(.4)`; });
+  setTimeout(()=>t.remove(),520);
+}
+
+/* ============================================================ MARQUEES */
+function buildMarquees(){
+  const odds='⚔️ DEMACIA ★ -20 ★ HERE COMES THE ROCKSLIDE ★ GUNGAFOODS IS LATE ★ KRATER FED ★ STELAKOSMAK ALL-IN ★ ATYXOS AGAIN ★ SOKIS CHAMP THROWING ★ OPAP THANKS YOU ★ GOLIATH DOWN ★ -20 ★ ';
+  const quotes='🪨 ROCK SOLID ODDS, LIQUID NET WORTH ★ MALPHITE FLASH R = PENTAKILL ★ MALZAHAR R IS ILLEGAL ★ SPIN TO WIN SPIN TO -20 ★ GUNGAFOODS NEVER ARRIVES ★ ';
+  const mk=s=>{ const span='<span>'+s.replace(/★/g,'<span class="hot">★</span>')+'</span>'; return span+span; };
+  $('#mq-odds').innerHTML=mk(odds);
+  $('#mq-quotes').innerHTML=mk(quotes);
+}
+
+/* ============================================================ ODDS BOARD */
+const ODDS_ROWS=[
+  ['Malphite Flash R Pentakill','-20'],
+  ['Garen Judgment Solo-Carries Your Elo','-20'],
+  ['Malzahar Point-Blank Suppress Lands First Try','-20'],
+  ['GUNGAFOODS Arrives Warm','-20 (RIGGED)'],
+  ['STELAKOSMAK Hits +1 For Once','SUSPENDED'],
+  ['SOKIS CHAMP No-Shows Your Promo Game','GUARANTEED'],
+  ['GOLIATH Stays Up Past Minute 15','-20'],
+  ['You Stop After "Just One More" KRATER','LOL -20']
+];
+function buildOddsBoard(){
+  const t=$('#odds-table');
+  t.innerHTML=ODDS_ROWS.map(r=>`<tr><td>${r[0]}</td><td class="o" data-target="${r[1]}">${r[1]}</td></tr>`).join('');
+  setInterval(()=>{
+    $$('#odds-table .o').forEach(c=>{
+      if(Math.random()<0.4){
+        const flash=pick(['+3.5','+12','EVEN','-7','+999','-20']);
+        c.textContent=flash; c.style.color=Math.random()<0.5?'#00ff66':'#ff2e63';
+        setTimeout(()=>{ c.textContent=c.dataset.target; c.style.color='#ff2e63'; }, rnd(200,600));
+      }
+    });
+  },900);
+}
+
+/* ============================================================ TOASTS */
+const TOASTS=['STELAKOSMAK just went -20 again','SOKIS CHAMP is throwing','GUNGAFOODS driver entered the KRATER',
+  'ATYXOS reconnected (then DC again)','OPAP thanks you for the -20','GOLIATH has fallen','Malphite is ulting your wallet'];
+function toast(txt){
+  const w=$('#toasts'); const el=document.createElement('div'); el.className='toast'; el.textContent='🔔 '+(txt||pick(TOASTS));
+  w.appendChild(el); requestAnimationFrame(()=>el.classList.add('in'));
+  setTimeout(()=>{el.classList.remove('in'); setTimeout(()=>el.remove(),400);}, 3800);
+  while(w.children.length>4) w.firstChild.remove();
+}
+function maybeToast(){ if(started && riftDepth>0.12) toast(); }
+
+/* ============================================================ SWARM (images/gifs) */
+function maybeSwarm(){
+  if(!started) return;
+  const layer=$('#fx-swarm');
+  const want = Math.max(6, Math.floor(riftDepth*MAX_SWARM));   // always a crowd, bigger when deeper
+  if(layer.children.length>=want) { // recycle oldest sometimes for churn
+    if(Math.random()<0.5 && layer.firstChild) layer.firstChild.remove();
+    return;
+  }
+  const n=rndi(2,4);
+  for(let k=0;k<n;k++){
+    const useGif = Math.random()<0.4;   // ~40% champion GIFs, ~60% your local photos
+    const url = useGif ? champGif(pick([GIF_GAREN_SPIN,GIF_MALPH_FLASH,GIF_MALZ_FLASH])) : randImg();
+    const img=document.createElement('img'); img.className='swarm-item brainrot';
+    img.src = url || randImg(); if(!img.getAttribute('src')) continue;
+    const size=rnd(160,360)*(0.8+riftDepth*0.6);     // MUCH bigger, scales with depth
+    img.style.width=size+'px'; img.style.height=size+'px';
+    img.style.left=rnd(-size*0.2,innerWidth-size*0.8)+'px'; img.style.top=rnd(-size*0.2,innerHeight-size*0.8)+'px';
+    img.style.transform=`rotate(${rnd(-40,40)}deg) scale(${rnd(.85,1.25)})`;
+    img.onerror=()=>img.remove();
+    layer.appendChild(img);
+    setTimeout(()=>img.remove(), rnd(3200,6800));
+  }
+  while(layer.children.length>MAX_SWARM) layer.firstChild.remove();
+}
+
+/* ============================================================ RAIN (emoji/-20) */
+function maybeRain(){
+  if(!started || riftDepth<0.25) return;
+  const layer=$('#fx-rain'), count=Math.random()<riftDepth?2:1;
+  for(let i=0;i<count;i++){
+    const el=document.createElement('div'); el.className='rain-item impact';
+    const isImg=Math.random()<0.32;   // more of YOUR photos raining down
+    if(isImg){ const src=randImg(); if(!src) continue; const im=document.createElement('img'); im.onerror=()=>el.remove(); im.style.width=rnd(90,180)+'px'; im.src=src; el.appendChild(im); }
+    else { el.textContent=pick(['⚔️','🪨','🟣','💀','🛵','📉','🎰','-20','💸']); el.style.fontSize=rnd(22,52)+'px'; if(el.textContent==='-20'){el.style.color='#ff2e63';el.style.textShadow='0 0 10px #ff004d';} }
+    const x=rnd(0,innerWidth), dur=rnd(2.5,5)/(0.6+riftDepth);
+    el.style.left=x+'px'; layer.appendChild(el);
+    const spin=rnd(-360,360); const start=performance.now();
+    (function fall(now){
+      const p=(now-start)/(dur*1000);
+      if(p>=1||!el.isConnected){el.remove();return;}
+      el.style.transform=`translateY(${p*(innerHeight+120)}px) rotate(${spin*p}deg)`;
+      requestAnimationFrame(fall);
+    })(start);
+  }
+}
+
+/* ============================================================ FLYING WORDS */
+function maybeFlyWord(){
+  if(!started || riftDepth<0.15) return;
+  const el=document.createElement('div'); const w=pick(WORDS);
+  el.className='flyword'+(w.includes('-20')?' neg':''); el.textContent=w;
+  el.style.fontSize=rnd(20,70)*(0.8+riftDepth)+'px';
+  el.style.color = w.includes('-20')?'#ff2e63':pick(['#ffe600','#00e5ff','#ff00d4','#00ff66','#fff']);
+  const fromLeft=Math.random()<0.5, y=rnd(0,innerHeight-40);
+  el.style.top=y+'px'; el.style.left=fromLeft?'-40vw':'120vw';
+  $('#fx-words').appendChild(el);
+  const dur=rnd(1.6,3.2)/(0.7+riftDepth), start=performance.now();
+  const x0=fromLeft?-40:120, x1=fromLeft?120:-40, spin=rnd(-30,30);
+  (function fly(now){
+    const p=clamp((now-start)/(dur*1000),0,1);
+    if(p>=1||!el.isConnected){el.remove();return;}
+    el.style.transform=`translateX(${(x1-x0)*p}vw) rotate(${spin*Math.sin(p*6)}deg)`;
+    requestAnimationFrame(fly);
+  })(start);
+}
+
+/* ============================================================ GAREN ROAMER */
+function garenRoamHop(){
+  if(!started) return;
+  // reuse the swarm but force a garen/local image that lissajous-roams
+  const layer=$('#fx-swarm'); const img=document.createElement('img'); img.className='swarm-item';
+  img.src = champGif(GIF_GAREN_SPIN); if(!img.src) img.src=randImg(); if(!img.getAttribute('src')) return;
+  img.style.width=img.style.height='90px'; img.onerror=()=>img.remove();
+  layer.appendChild(img);
+  const start=performance.now(), life=rnd(3500,6000), ax=rnd(.5,2), ay=rnd(.5,2), ph=rnd(0,6);
+  (function roam(now){
+    const p=(now-start)/life; if(p>=1||!img.isConnected){img.remove();return;}
+    const x=(innerWidth/2)+(innerWidth*0.4)*Math.sin(now/700*ax+ph);
+    const y=(innerHeight/2)+(innerHeight*0.35)*Math.sin(now/600*ay);
+    img.style.left=x+'px'; img.style.top=y+'px'; img.style.transform=`rotate(${now/4%360}deg)`;
+    requestAnimationFrame(roam);
+  })(start);
+}
+
+/* ============================================================ POPUPS */
+const POPUP_TEXTS=['MALZAHAR HAS SUPPRESSED YOU','ERROR 0xDEMACIA: GUNGAFOODS.dll not found',
+  'STELAKOSMAK.exe stopped responding','SOKIS CHAMP detected: -20 social credit',
+  'ENEMY HAS BEEN SLAIN (it was you)','HERE COMES THE ROCKSLIDE','KRATER.sys requires more -20',
+  'you are not a robot, you are a SOKIS CHAMP','GOLIATH down. Surrender? (you will anyway)',
+  'OPAP would like to charge you -20 €'];
+function popupCount(){ return $('#fx-pop').children.length; }
+function spawnPopup(text, near){
+  if(popupCount()>=MAX_POPUPS){ $('#fx-pop').firstChild.remove(); }
+  const p=document.createElement('div'); p.className='popup';
+  const w=Math.min(320,innerWidth*0.86);
+  const x = near? clamp(near.x-w/2,4,innerWidth-w-4) : rnd(4,Math.max(4,innerWidth-w-4));
+  const y = near? clamp(near.y-40,4,innerHeight-160) : rnd(4,Math.max(4,innerHeight-180));
+  p.style.left=x+'px'; p.style.top=y+'px';
+  const thumb = Math.random()<0.7 ? `<img class="thumb" src="${ (Math.random()<0.5&&GIF_MALZ_FLASH)?GIF_MALZ_FLASH:randImg() }" onerror="this.style.display='none'">` : '<div class="ico">⚠️</div>';
+  p.innerHTML=`<div class="tb"><span>⚠ STELAKOSMAK.exe</span><span class="x">✕</span></div>
+    <div class="body">${thumb}<div>${text||pick(POPUP_TEXTS)}</div></div>
+    <div class="btns"><button class="ok">OK (-20)</button><button class="giveup">no thx i give up</button></div>`;
+  $('#fx-pop').appendChild(p);
+  if(started) playVoice('malzahar');
+  // dragging
+  makeDraggable(p, p.querySelector('.tb'));
+  // CURSED X -> spawns 2-3 MORE popups
+  p.querySelector('.x').addEventListener('click',e=>{
+    e.stopPropagation();
+    const n=rndi(2,3);
+    for(let i=0;i<n;i++) setTimeout(()=>spawnPopup(pick(['YOU CANNOT ESCAPE THE NETHER GRASP','nice try -20','HYDRA: cut one, grow two','SUPPRESSED again, ATYXOS']),{x:x+rnd(-40,40),y:y+rnd(-30,30)}), i*120);
+  });
+  p.querySelector('.ok').addEventListener('click',e=>{ e.stopPropagation(); toast('charged -20 €'); spawnPopup('OPAP confirms: -20 €',{x:x+30,y:y+30}); });
+  // the GENUINE close (low contrast, the only honest escape besides ESC)
+  p.querySelector('.giveup').addEventListener('click',e=>{ e.stopPropagation(); p.remove(); });
+}
+/* ONE global drag manager (no per-popup window listeners => no memory leak) */
+let dragEl=null,dragDX=0,dragDY=0;
+window.addEventListener('pointermove',e=>{ if(!dragEl)return; dragEl.style.left=clamp(e.clientX-dragDX,0,innerWidth-40)+'px'; dragEl.style.top=clamp(e.clientY-dragDY,0,innerHeight-40)+'px'; });
+window.addEventListener('pointerup',()=>{ if(!dragEl)return; const h=dragEl.querySelector('.tb'); if(h)h.style.cursor='grab'; dragEl=null; });
+function makeDraggable(el, handle){
+  handle.addEventListener('pointerdown',e=>{ dragEl=el; dragDX=e.clientX-el.offsetLeft; dragDY=e.clientY-el.offsetTop; handle.style.cursor='grabbing'; e.stopPropagation(); });
+}
+// click-anywhere spawns a troll popup (ignores clicks on real controls)
+document.addEventListener('click',e=>{
+  if(!started) return;
+  if(e.target.closest('.popup,.rail,#ctxmenu,button,a,.cap-grid,.captcha,.runaway,.rock-btn')) return;
+  if(riftDepth<0.04 && popupCount()>0) return;
+  spawnPopup(null,{x:e.clientX,y:e.clientY});
+});
+
+/* ============================================================ MALPHITE AMBUSH */
+function maybeAmbush(){
+  if(!started || riftDepth<0.3) return;
+  const a=$('#ambush'); a.classList.add('on');
+  document.body.classList.add('demacia-quake'); playVoice('malphite');
+  const gif=a.querySelector('.gif');
+  setChampVisual(gif, GIF_MALPH_FLASH, '🪨');
+  setTimeout(()=>{ a.classList.remove('on'); document.body.classList.remove('demacia-quake'); }, 750);
+}
+
+/* ============================================================ MALZAHAR SUPPRESS */
+let suppressActive=false, lastSuppress=0;
+function triggerSuppress(){
+  if(suppressActive || calm) return;
+  if(performance.now()-lastSuppress<9000) return;
+  lastSuppress=performance.now(); suppressActive=true;
+  const s=$('#suppress'); s.classList.add('on'); playVoice('malzahar');
+  setChampVisual(s.querySelector('.ring'), GIF_MALZ_FLASH, '');   // fresh random visual each suppress
+  document.documentElement.style.overflow='hidden'; document.body.style.overflow='hidden';
+  const chan=$('#supp-chan'); chan.style.transition='none'; chan.style.width='100%';
+  requestAnimationFrame(()=>{ chan.style.transition='width 2.5s linear'; chan.style.width='0%'; });
+  let to;
+  const end=()=>{ s.classList.remove('on'); document.documentElement.style.overflow=''; document.body.style.overflow=''; suppressActive=false; clearTimeout(to); window.removeEventListener('keydown',esc); };
+  const esc=ev=>{ if(ev.key==='Escape') end(); };
+  to=setTimeout(end,2500);
+  window.addEventListener('keydown',esc);
+}
+// fast scroll while deep -> Malzahar suppresses you
+window.addEventListener('wheel',e=>{ if(started && riftDepth>0.55 && Math.abs(e.deltaY)>120 && Math.random()<0.25) triggerSuppress(); },{passive:true});
+
+/* ============================================================ ROCK SOLID btns */
+$$('.rock-btn').forEach(b=>{
+  b.addEventListener('mouseenter',()=>{ const k=b.dataset.vo; if(started){playVoice(k);} if(k==='malphite'){document.body.classList.add('demacia-quake'); setTimeout(()=>document.body.classList.remove('demacia-quake'),350);} });
+  b.addEventListener('click',e=>{ e.stopPropagation(); const k=b.dataset.vo; if(started)playVoice(k);
+    if(k==='garen') flashBig('DEMACIA!'); if(k==='malphite') maybeAmbush(); if(k==='malzahar') triggerSuppress(); });
+});
+
+/* ============================================================ CAPTCHA */
+function buildCaptcha(){
+  const grid=$('#cap-grid'); grid.innerHTML='';
+  const imgs=shuffle(LOCAL_IMAGES);
+  for(let i=0;i<9;i++){
+    const tile=document.createElement('div'); tile.className='tile';
+    // every tile is "Garen spinning" — if no gif, use a random local image, all identical-ish chaos
+    if(GIF_GAREN_SPIN){ const g=document.createElement('div'); g.className='gif'; g.style.backgroundImage=`url('${GIF_GAREN_SPIN}')`; tile.appendChild(g); }
+    else { tile.style.backgroundImage=`url('${encodeURI(imgs[i%imgs.length])}')`; const g=document.createElement('div'); g.className='gif'; g.style.background='none'; tile.appendChild(g); }
+    tile.onclick=()=>tile.classList.toggle('sel');
+    grid.appendChild(tile);
+  }
+}
+let capTries=0;
+$('#cap-verify').addEventListener('click',e=>{
+  e.stopPropagation(); capTries++;
+  if(capTries>=2){
+    // Malphite ult's you past the captcha
+    maybeAmbushForce(); $('#captcha').style.display='none'; $('#slip').style.display='block';
+    toast('Malphite Flash R bypassed the captcha for you. -20');
+  } else {
+    $('#cap-grid').querySelectorAll('.tile').forEach(t=>t.classList.remove('sel'));
+    buildCaptcha(); toast('ERROR: too much DEMACIA, please try again');
+    spawnPopup('CAPTCHA FAILED: you are a SOKIS CHAMP, not a robot',{x:innerWidth/2,y:innerHeight/2});
+  }
+});
+function maybeAmbushForce(){ const a=$('#ambush'); a.classList.add('on'); const gif=a.querySelector('.gif');
+  setChampVisual(gif, GIF_MALPH_FLASH, '🪨');
+  playVoice('malphite'); document.body.classList.add('demacia-quake'); setTimeout(()=>{a.classList.remove('on');document.body.classList.remove('demacia-quake');},750); }
+
+/* ============================================================ BETTING SLIP */
+const REEL_FACES=['💀','🪨','⚔️','🟣','🍔','7️⃣','💸','🎰'];
+function buildReels(){
+  const r=$('#reels'); r.innerHTML='';
+  for(let i=0;i<3;i++){ const reel=document.createElement('div'); reel.className='reel';
+    const strip=document.createElement('div'); strip.className='strip'; strip.textContent='🎰'; reel.appendChild(strip); r.appendChild(reel); }
+}
+let balance=START_BALANCE;
+function rollReels(){
+  $$('#reels .strip').forEach((s,i)=>{
+    let n=0; const iv=setInterval(()=>{ s.textContent=pick(REEL_FACES); if(++n>10+i*6){clearInterval(iv); s.textContent='💀';} }, 60);
+  });
+  setTimeout(()=>{
+    flashBig('JACKPOT!!'); chaching();
+    balance = balance - 20;
+    $('#balance').textContent = balance>0 ? `BALANCE: ${balance.toFixed(2)} €` : 'KRATER OWNS YOU NOW (-20)';
+    spawnPopup('🎉 JACKPOT!! YOU WON: OPAP -20 € 🎉  (KRATER house edge: ∞%)',{x:innerWidth/2,y:innerHeight/2});
+  }, 900);
+}
+function chaching(){ if(!ctx)return; const t=ctx.currentTime;
+  [880,1175,1568].forEach((f,i)=>{ const o=ctx.createOscillator(),g=ctx.createGain(); o.type='square'; o.frequency.value=f;
+    g.gain.setValueAtTime(0.0001,t+i*0.08); g.gain.exponentialRampToValueAtTime(0.3,t+i*0.08+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+i*0.08+0.25);
+    o.connect(g); g.connect(masterGain); o.start(t+i*0.08); o.stop(t+i*0.08+0.3); }); }
+// runaway buttons flee the cursor
+$$('.runaway').forEach(btn=>{
+  let dodges=0;
+  btn.addEventListener('mouseenter',()=>{
+    if(dodges>=DODGE_LIMIT) return;
+    dodges++; btn.style.transform=`translate(${rnd(-120,120)}px,${rnd(-70,70)}px) rotate(${rnd(-12,12)}deg)`;
+    if(dodges>=DODGE_LIMIT) setTimeout(()=>{btn.style.transform='';btn.textContent='ok fine, CASH OUT (-20)';},400);
+  });
+  btn.addEventListener('click',e=>{ e.stopPropagation(); rollReels(); });
+});
+
+/* ============================================================ GUNGAFOODS */
+function startGunga(){
+  const fill=$('#gunga-fill'), eta=$('#gunga-eta'); let p=0, etaMin=12;
+  setInterval(()=>{
+    p+=rnd(3,10);
+    if(p>=100){ p=0; etaMin+=rndi(4,12);
+      eta.textContent='ETA: '+etaMin+' min — '+pick(['driver got SOKIS CHAMP, restarting','driver entered the KRATER and did not return','gyros went -20, recooking','STELAKOSMAK ate it, sorry']);
+      eta.style.color='#ff2e63';
+    } else { eta.style.color='#ffae00'; }
+    fill.style.width=p+'%';
+  },700);
+}
+
+/* ============================================================ BIG FLASH */
+function flashBig(txt){
+  const s=$('#bigflash-txt'); s.textContent=txt; s.classList.remove('go'); void s.offsetWidth; s.classList.add('go');
+}
+
+/* ============================================================ RAILS */
+$('#panic').addEventListener('click',panic);
+function panic(){
+  $('#fx-pop').innerHTML=''; $('#fx-swarm').innerHTML=''; $('#fx-rain').innerHTML=''; $('#fx-words').innerHTML='';
+  $('#suppress').classList.remove('on'); $('#ambush').classList.remove('on');
+  document.documentElement.style.overflow=''; document.body.style.overflow=''; suppressActive=false;
+  $('#ctxmenu').classList.remove('on');
+  toast('GG. /ff');
+}
+$('#mute').addEventListener('click',()=>{
+  muted=!muted; localStorage.setItem('brmute',muted?'1':'0');
+  $('#mute').textContent=muted?'🔇 OFF':'🔊 ON';
+  if(ctx&&masterGain){ masterGain.gain.cancelScheduledValues(ctx.currentTime); masterGain.gain.setTargetAtTime(targetMaster(),ctx.currentTime,0.05); }
+});
+$('#mute').textContent = muted?'🔇 OFF':'🔊 ON';
+window.addEventListener('keydown',e=>{ if(e.key==='Escape') panic(); });
+window.addEventListener('pagehide',()=>{ if(schedTimer) clearInterval(schedTimer); });
+
+/* ============================================================ FAKE RIGHT-CLICK */
+document.addEventListener('contextmenu',e=>{
+  e.preventDefault(); const m=$('#ctxmenu');
+  m.style.left=clamp(e.clientX,0,innerWidth-210)+'px'; m.style.top=clamp(e.clientY,0,innerHeight-160)+'px';
+  m.classList.add('on');
+});
+$('#ctxmenu').addEventListener('click',e=>{
+  const act=e.target.dataset.act; $('#ctxmenu').classList.remove('on');
+  if(act==='ff'){ panic(); flashBig('/FF'); }
+  else if(act==='sauce'){ spawnPopup('NICE TRY. Inspect element is for GOLIATH only. -20 social credit.'); }
+  else if(act==='copy'){ spawnPopup('Copied "STELAKOSMAK" to clipboard… psych. -20.'); }
+  else if(act==='report'){ spawnPopup('Reported to OPAP. OPAP charged you -20 for the inconvenience.'); }
+});
+window.addEventListener('scroll',()=>$('#ctxmenu').classList.remove('on'));
+
+/* ============================================================ TAB HECKLE */
+const realTitle=document.title;
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden) document.title=pick(['where did u go ATYXOS 😢','-20 for leaving','SOKIS CHAMP… come back','STELAKOSMAK misses you (-20)','HERE COMES THE ROCKSLIDE 🪨']);
+  else document.title=realTitle;
+});
+
+/* apply reduced-motion default */
+if(calm) document.body.classList.add('calm');
+</script>
+</body>
+</html>
