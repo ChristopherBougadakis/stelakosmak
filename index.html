@@ -124,7 +124,7 @@ body.calm .brainrot{animation:none;}
 /* ====================================================== LOADER (99% troll) */
 #loader{
   position:fixed;inset:0;z-index:9000;display:none;flex-direction:column;
-  align-items:center;justify-content:center;gap:20px;background:#070012;text-align:center;padding:24px;
+  align-items:center;justify-content:center;gap:20px;background:rgba(7,0,18,.8);text-align:center;padding:24px;
 }
 #loader.show{display:flex;}
 #loader h2{font-family:Impact,sans-serif;font-size:clamp(20px,5vw,48px);margin:0;color:#ffe600;}
@@ -317,6 +317,43 @@ body.stunned #fx-swarm,body.stunned #fx-rain,body.stunned #fx-words{filter:grays
 #ctxmenu.on{display:block;}
 #ctxmenu div{padding:8px 14px;cursor:pointer;color:#fff;border-bottom:1px solid #ffffff14;}
 #ctxmenu div:hover{background:#00e5ff;color:#000;}
+
+/* secret EXIT-CODE button + password dialog */
+#exit-btn{top:12px;right:12px;background:#0a3;color:#fff;}
+#pw-overlay{position:fixed;inset:0;z-index:10010;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.62);}
+#pw-overlay.on{display:flex;}
+#pw-box{background:#0f1320;border:3px solid #00e5ff;border-radius:12px;padding:22px;width:min(360px,92vw);text-align:center;font-family:Tahoma,Arial,sans-serif;box-shadow:0 0 40px #000;}
+#pw-box .pw-title{font-family:Impact,sans-serif;font-size:22px;color:#00e5ff;margin-bottom:8px;}
+#pw-box p{font-size:14px;color:#cfd;margin:6px 0 14px;}
+#pw-input{width:100%;padding:12px;font-size:18px;text-align:center;letter-spacing:3px;border:2px solid #00e5ff;border-radius:6px;background:#05060c;color:#fff;font-family:monospace;}
+#pw-box .pw-actions{display:flex;gap:10px;justify-content:center;margin-top:14px;}
+#pw-submit{font-family:Impact,sans-serif;background:#00e5ff;color:#001;border:none;padding:10px 22px;border-radius:6px;cursor:pointer;font-size:16px;}
+#pw-cancel{background:none;border:none;color:#889;text-decoration:underline;cursor:pointer;font-size:13px;}
+#pw-hint{margin-top:10px;font-size:11px;color:#ff6b8a;}
+
+/* NORMAL MODE (correct code) — brainrot vanishes, a clean Contact page shows */
+#normal-page{display:none;min-height:100vh;background:#15171c;color:#e8e8e8;text-align:center;padding:48px 20px;gap:18px;
+  font-family:'Segoe UI',Arial,sans-serif;flex-direction:column;align-items:center;justify-content:center;}
+body.normal{cursor:auto !important;background:#15171c !important;}
+body.normal #wrapper{display:none !important;}
+body.normal #normal-page{display:flex;}
+body.normal #cursor,body.normal #fx-swarm,body.normal #fx-rain,body.normal #fx-words,body.normal #fx-pop,
+body.normal #depthHUD,body.normal #bigflash,body.normal #ambush,body.normal #garen-ult,body.normal #suppress,
+body.normal .rail,body.normal .toast-wrap,body.normal #ctxmenu,body.normal #loader{display:none !important;}
+#normal-page h1{font-size:clamp(30px,6vw,54px);margin:0;color:#fff;font-weight:700;letter-spacing:1px;}
+#normal-page .sub{color:#9aa3af;max-width:560px;line-height:1.6;font-size:16px;}
+#normal-page .contact{background:#1e2128;border:1px solid #2e323c;border-radius:14px;padding:26px 30px;margin-top:8px;min-width:min(420px,92vw);}
+#normal-page .contact h2{margin:0 0 14px;font-size:22px;color:#fff;}
+#normal-page .contact a{display:block;margin:10px 0;font-size:18px;color:#4ea1ff;text-decoration:none;}
+#normal-page .contact a:hover{text-decoration:underline;}
+#normal-page .foot{color:#5a6472;font-size:12px;margin-top:18px;}
+
+/* RAGE MODE (wrong code) — extremely fast + loud */
+body.rage #wrapper{animation:rageshake .1s steps(2) infinite !important;}
+@keyframes rageshake{0%{transform:translate(-4px,3px) rotate(-.4deg);}50%{transform:translate(4px,-3px) rotate(.4deg);}100%{transform:translate(-3px,-4px);}}
+body.rage .marquee .track{animation-duration:2.2s !important;}
+body.rage .brainrot{animation-duration:.06s !important;}
+body.rage .rainbow-text{animation-duration:.4s,.12s !important;}
 
 /* ===================== RESPONSIVE / MOBILE ===================== */
 .slip{max-width:min(440px,94vw);}
@@ -553,6 +590,30 @@ body.stunned #fx-swarm,body.stunned #fx-rain,body.stunned #fx-words{filter:grays
 <div id="depthHUD">DEPTH 0% • CALM</div>
 <button class="rail" id="panic">🛑 PANIC / GG</button>
 <button class="rail" id="mute">🔊 ON</button>
+<button class="rail" id="exit-btn">🔑 EXIT CODE</button>
+
+<!-- secret password dialog: MNA-3825 normalizes the page; anything else = rage mode -->
+<div id="pw-overlay">
+  <div id="pw-box">
+    <div class="pw-title">🔒 STELAKOSMAK SECURITY</div>
+    <p>Enter the secret EXIT CODE to escape the Rift.</p>
+    <input id="pw-input" type="text" placeholder="• • • • • • • •" autocomplete="off" spellcheck="false" />
+    <div class="pw-actions"><button id="pw-submit">SUBMIT</button><button id="pw-cancel">cancel</button></div>
+    <div id="pw-hint">⚠ wrong code = the KRATER consumes you (faster &amp; louder)</div>
+  </div>
+</div>
+
+<!-- shown only after the CORRECT exit code: a perfectly normal contact page -->
+<div id="normal-page">
+  <h1>STELAKOSMAK</h1>
+  <p class="sub">Welcome. This is a perfectly normal, responsible website. There is absolutely no Rift here, and definitely no -20. Balance: 0.</p>
+  <div class="contact">
+    <h2>📇 Contact Us</h2>
+    <a href="mailto:xkostas6x@gmail.com">✉️ xkostas6x@gmail.com</a>
+    <a href="tel:+306944033313">📞 +30 694 403 3313</a>
+  </div>
+  <p class="foot">© STELAKOSMAK — open responsibly.</p>
+</div>
 
 <script>
 /* ============================================================================
@@ -648,7 +709,7 @@ let started=false, audioUnlocked=false, muted=(localStorage.getItem('brmute')===
 let calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 let riftDepth=0, scrollVel=0, lastScrollY=0;
 let mx=innerWidth/2, my=innerHeight/2, cx=mx, cy=my, lastFlick=0;
-let bassDropped=false, lastMqDepth=-1;
+let bassDropped=false, lastMqDepth=-1, chaosStart=0, escaped=false, rage=false, chaosTimers=[];
 
 /* ============================================================ AUDIO ENGINE */
 let ctx=null, masterGain=null, comp=null, makeup=null, droneBus=null, lowpass=null, panner=null;
@@ -805,6 +866,7 @@ function audioFrame(){
 /* ============================================================ ENTER / GATE */
 function enterRift(){
   if(started) return; started=true;
+  chaosStart=performance.now();     // stamp the clock at ENTER (defensive; startChaos re-stamps the same instant)
   document.body.classList.add('entered');
   if(calm) document.body.classList.add('calm');
   try{
@@ -814,51 +876,55 @@ function enterRift(){
   // hide gate
   const gate=$('#gate'); gate.style.transition='opacity .5s'; gate.style.opacity='0';
   setTimeout(()=>gate.style.display='none',500);
-  // run the trolling loader, which then reveals the site & starts loops
+  // brainrot starts IMMEDIATELY; the 99% loader is now just a quick cosmetic flash on top
+  startChaos();
   runLoader();
 }
 $('#enter-btn').addEventListener('click',enterRift);
 $('#calm-link').addEventListener('click',()=>{ calm=true; enterRift(); });
 
 /* ============================================================ 99% LOADER */
-function runLoader(){
+function runLoader(){   // quick ~1.5s cosmetic 99% gag; chaos is ALREADY running behind it
   const L=$('#loader'); L.classList.add('show');
   const fill=$('#load-fill'), pct=$('#load-pct'), msg=$('#load-msg');
-  const resets=['ATYXOS — CONNECTION LOST. RECONNECTING… (-20 LP)',
-                'SOKIS CHAMP queue dodged (-20 LP)',
-                'STELAKOSMAK failed to load. KRATER too deep.'];
-  let p=0, loops=0, hanging=false;
-  const tick=()=>{
-    if(hanging) return;
-    p += p<70 ? rnd(2,6) : p<95 ? rnd(0.6,2) : 0.25;
-    if(p>=99){ p=99; hanging=true; msg.textContent='Waiting for STELAKOSMAK…';
-      setTimeout(()=>{
-        if(loops<2){ loops++; p=rnd(8,14); hanging=false; msg.textContent=pick(resets); msg.style.color='#ff2e63'; }
-        else { msg.textContent='whatever, just go in →'; finishLoader(); }
-      }, 1400);
-    }
-    fill.style.width=p+'%'; pct.textContent=Math.floor(p)+'%';
-  };
-  const iv=setInterval(()=>{ if(!$('#loader').classList.contains('show')){clearInterval(iv);return;} tick(); },120);
-  $('#reconnect-btn').onclick=()=>{ const b=$('#reconnect-btn'); b.style.transform=`translate(${rnd(-8,8)}px,${rnd(-6,6)}px) rotate(${rnd(-6,6)}deg)`;
-    setTimeout(()=>b.style.transform='',120); toast('RECONNECT button did nothing. -20 LP'); };
-  $('#skip-load').onclick=finishLoader;
-  function finishLoader(){ clearInterval(iv); L.classList.remove('show'); startChaos(); }
+  let p=0, reset=false, done=false;
+  const iv=setInterval(()=>{
+    if(done) return;
+    p += p<60 ? rnd(14,26) : rnd(5,11);
+    if(p>=99 && !reset){ reset=true; p=99; fill.style.width='99%'; pct.textContent='99%';
+      msg.textContent='ATYXOS — RECONNECTING… (-20 LP)'; msg.style.color='#ff2e63';
+      setTimeout(()=>{ p=rnd(45,60); }, 320); return; }
+    if(p>=100){ finish(); return; }
+    fill.style.width=Math.min(p,100)+'%'; pct.textContent=Math.floor(Math.min(p,100))+'%';
+  },85);
+  $('#reconnect-btn').onclick=()=>{ const b=$('#reconnect-btn'); b.style.transform=`translate(${rnd(-8,8)}px,${rnd(-6,6)}px) rotate(${rnd(-6,6)}deg)`; setTimeout(()=>b.style.transform='',120); };
+  $('#skip-load').onclick=finish;
+  function finish(){ if(done) return; done=true; clearInterval(iv);
+    L.style.transition='opacity .4s'; L.style.opacity='0';
+    setTimeout(()=>{ L.classList.remove('show'); L.style.opacity=''; L.style.transition=''; }, 420); }
 }
 
 /* ============================================================ START CHAOS */
 function startChaos(){
+  chaosStart=performance.now();
   buildMarquees(); buildOddsBoard(); buildCaptcha(); buildReels();
   scrollLoop();           // rAF: depth + audio + visuals
-  setInterval(maybeSwarm, 420);
-  setInterval(maybeRain, 380);
-  setInterval(maybeFlyWord, 900);
-  setInterval(maybeToast, 4200);
-  setInterval(maybeAmbush, rndi(9000,16000));
-  setInterval(garenRoamHop, 2600);
-  setInterval(()=>{ if(started && riftDepth>0.12 && !suppressActive && Math.random()<0.6) garenUlt(); }, rndi(11000,17000));
+  setChaosTimers(1);      // spawner intervals (speed multiplier 1 = normal)
   startGunga();
   setTimeout(garenUlt, 1100);   // SEE the Garen ult right after entering
+}
+
+/* (re)create the spawner intervals. m<1 => everything spawns FASTER (rage mode). */
+function setChaosTimers(m){
+  chaosTimers.forEach(clearInterval); chaosTimers=[];
+  if(escaped) return;     // normalized -> stay quiet
+  chaosTimers.push(setInterval(maybeSwarm, 420*m));
+  chaosTimers.push(setInterval(maybeRain, 380*m));
+  chaosTimers.push(setInterval(maybeFlyWord, 900*m));
+  chaosTimers.push(setInterval(maybeToast, 4200*m));
+  chaosTimers.push(setInterval(maybeAmbush, rndi(9000,16000)*m));
+  chaosTimers.push(setInterval(garenRoamHop, 2600*m));
+  chaosTimers.push(setInterval(()=>{ if(started && riftDepth>0.12 && !suppressActive && !escaped && Math.random()<0.6) garenUlt(); }, rndi(11000,17000)*m));
 }
 
 /* ============================================================ riftDepth rAF */
@@ -867,7 +933,12 @@ function scrollLoop(){
   const raw=clamp(window.scrollY/maxScroll,0,1);
   scrollVel = scrollVel*0.8 + Math.abs(window.scrollY-lastScrollY)*0.05;
   lastScrollY=window.scrollY;
-  riftDepth += (raw - riftDepth)*0.08;                 // one-pole smoothing
+  // intensity rises with SCROLL *and* with TIME, and never starts at zero
+  const elapsed=(performance.now()-chaosStart)/1000;
+  const timeRamp=clamp(elapsed/110,0,0.92);            // ~2 min to near-max on its own
+  const target = escaped ? 0 : rage ? 1
+               : clamp(0.15 + Math.max(raw,timeRamp) + Math.min(raw,timeRamp)*0.25, 0, 1);
+  riftDepth += (target - riftDepth)*0.08;              // one-pole smoothing
   document.documentElement.style.setProperty('--intensity', riftDepth.toFixed(3));
   // tiers
   const b=document.body.classList;
@@ -886,7 +957,7 @@ function scrollLoop(){
     lastMqDepth=riftDepth;
   }
   // bass drop edge (hysteresis)
-  if(!bassDropped && riftDepth>DEPTH_THRESHOLD){ bassDropped=true; doMeltdown(); }
+  if(!escaped && !bassDropped && riftDepth>DEPTH_THRESHOLD){ bassDropped=true; doMeltdown(); }
   if(bassDropped && riftDepth<0.68) bassDropped=false;
   audioFrame();
   requestAnimationFrame(scrollLoop);
@@ -1089,8 +1160,8 @@ function makeDraggable(el, handle){
 }
 // click-anywhere spawns a troll popup (ignores clicks on real controls)
 document.addEventListener('click',e=>{
-  if(!started) return;
-  if(e.target.closest('.popup,.rail,#ctxmenu,button,a,.cap-grid,.captcha,.runaway,.rock-btn')) return;
+  if(!started || escaped) return;
+  if(e.target.closest('.popup,.rail,#ctxmenu,#pw-overlay,button,a,input,.cap-grid,.captcha,.runaway,.rock-btn')) return;
   if(riftDepth<0.04 && popupCount()>0) return;
   spawnPopup(null,{x:e.clientX,y:e.clientY});
 });
@@ -1280,6 +1351,42 @@ document.addEventListener('visibilitychange',()=>{
   if(document.hidden) document.title=pick(['where did u go ATYXOS 😢','-20 for leaving','SOKIS CHAMP… come back','STELAKOSMAK misses you (-20)','HERE COMES THE ROCKSLIDE 🪨']);
   else document.title=realTitle;
 });
+
+/* ===================== SECRET EXIT CODE ===================== */
+function openPw(){ const o=$('#pw-overlay'); o.classList.add('on'); const i=$('#pw-input'); i.value=''; setTimeout(()=>i.focus(),30); }
+function closePw(){ $('#pw-overlay').classList.remove('on'); }
+function checkPw(){
+  const v=$('#pw-input').value.trim().toUpperCase(); closePw();
+  if(v==='MNA-3825') normalizePage();   // correct => page becomes a normal contact page, brainrot gone
+  else rageMode();                      // wrong   => brainrot becomes EXTREMELY fast + loud
+}
+function normalizePage(){
+  if(escaped) return; escaped=true; rage=false;
+  setChaosTimers(1);                                   // escaped => clears all spawners, no restart
+  if(schedTimer){ clearInterval(schedTimer); schedTimer=null; }
+  muted=true; localStorage.setItem('brmute','1');
+  if(ctx&&masterGain){ masterGain.gain.cancelScheduledValues(ctx.currentTime); masterGain.gain.setTargetAtTime(0.0001,ctx.currentTime,0.15); }
+  panic();                                             // clears popups/overlays/stun
+  document.body.classList.remove('demacia-quake','crunch','tier-meltdown','tier-fried','tier-spicy','rage','tier-calm');
+  document.body.classList.add('normal');
+  document.documentElement.style.setProperty('--intensity','0');
+  document.title='STELAKOSMAK — Contact';
+  window.scrollTo(0,0);
+}
+function rageMode(){
+  if(escaped) return; rage=true;
+  document.body.classList.add('rage');
+  muted=false; localStorage.setItem('brmute','0'); $('#mute').textContent='🔊 ON';
+  if(ctx&&masterGain){ masterGain.gain.cancelScheduledValues(ctx.currentTime); masterGain.gain.setTargetAtTime(2.4,ctx.currentTime,0.1); }
+  if(ctx&&makeup){ makeup.gain.setTargetAtTime(4.5,ctx.currentTime,0.1); }
+  setChaosTimers(0.28);                                // EVERYTHING spawns way faster
+  flashBig('WRONG -20'); garenUlt();
+  for(let i=0;i<5;i++) setTimeout(()=>spawnPopup(pick(['ACCESS DENIED — ENJOY THE KRATER','WRONG CODE. ATYXOS.','nice try -20','THE KRATER CONSUMES YOU','MALZAHAR SAYS NO'])), i*110);
+}
+$('#exit-btn').addEventListener('click',openPw);
+$('#pw-cancel').addEventListener('click',closePw);
+$('#pw-submit').addEventListener('click',checkPw);
+$('#pw-input').addEventListener('keydown',e=>{ e.stopPropagation(); if(e.key==='Enter') checkPw(); else if(e.key==='Escape') closePw(); });
 
 /* apply reduced-motion default */
 if(calm) document.body.classList.add('calm');
