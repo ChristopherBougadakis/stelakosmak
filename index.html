@@ -29,7 +29,7 @@ html{scroll-behavior:auto;}
 body{
   margin:0; padding:0; background:#05010a; color:#fff; overflow-x:hidden;
   font-family:'Comic Sans MS','Comic Sans',cursive;
-  cursor:none;                    /* hidden so our custom Garen cursor takes over */
+  cursor:auto;                    /* keep the REAL cursor visible so you can always click */
 }
 @media (pointer:coarse){ body{cursor:auto;} }  /* touch devices keep a real cursor */
 a{color:#0ff;}
@@ -906,13 +906,14 @@ function enterRift(){   // AUTO-runs on load — no "enable sound" button needed
 }
 // the FIRST click/tap/key anywhere resumes audio (browser autoplay policy) + goes fullscreen — no button
 function armAudioUnlock(){
-  const unlock=()=>{
-    const h=$('#snd-hint'); if(h) h.classList.add('gone');
-    if(ctx){ ctx.resume().then(()=>{ if(ctx.state==='running'){ if(!audioUnlocked){ audioUnlocked=true; blip(); }
-      ['pointerdown','touchstart','keydown','click'].forEach(ev=>window.removeEventListener(ev,unlock,true)); } }).catch(()=>{}); }
-    goFullscreen();
+  const evs=['pointerdown','touchstart','keydown','click','mousemove','pointermove','wheel','scroll'];
+  const unlock=(e)=>{
+    if(ctx){ ctx.resume().then(()=>{ if(ctx.state==='running'){
+      if(!audioUnlocked){ audioUnlocked=true; blip(); const h=$('#snd-hint'); if(h) h.classList.add('gone'); }
+      evs.forEach(ev=>window.removeEventListener(ev,unlock,true)); } }).catch(()=>{}); }
+    if(e && (e.type==='pointerdown'||e.type==='touchstart'||e.type==='keydown'||e.type==='click')) goFullscreen();
   };
-  ['pointerdown','touchstart','keydown','click'].forEach(ev=>window.addEventListener(ev,unlock,true));
+  evs.forEach(ev=>window.addEventListener(ev,unlock,true));
 }
 enterRift();   // <-- start the brainrot immediately on load
 
