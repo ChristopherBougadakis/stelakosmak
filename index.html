@@ -111,6 +111,11 @@ body.demacia-quake{animation:quake .4s linear infinite;}
 #enter-btn:hover{transform:scale(1.06) rotate(-1deg);}
 #gate .sub{font-family:Impact,sans-serif;font-size:clamp(13px,2.5vw,18px);color:#0ff;letter-spacing:2px;}
 #calm-link{font-size:12px;color:#888;text-decoration:underline;cursor:pointer;background:none;border:none;}
+body.entered #gate{display:none;}
+#snd-hint{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:10003;background:rgba(0,0,0,.72);color:#fff;
+  font-family:Impact,sans-serif;font-size:14px;letter-spacing:1px;padding:8px 16px;border-radius:20px;border:2px solid #0ff;
+  pointer-events:none;animation:strobe .6s steps(2) infinite;white-space:nowrap;}
+#snd-hint.gone,body.normal #snd-hint{display:none;}
 
 /* prefers-reduced-motion / calm mode: kill the seizure-grade stuff but keep theme */
 body.calm *{animation-duration:6s !important;}
@@ -347,9 +352,10 @@ body.normal .rail,body.normal .toast-wrap,body.normal #ctxmenu,body.normal #load
 #normal-page .contact a{display:block;margin:10px 0;font-size:18px;color:#4ea1ff;text-decoration:none;}
 #normal-page .contact a:hover{text-decoration:underline;}
 #normal-page .foot{color:#5a6472;font-size:12px;margin-top:18px;}
-#normal-page .gal-title{color:#fff;margin:24px 0 0;font-size:20px;}
-#normal-page .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;max-width:760px;width:100%;margin:14px auto 0;}
-#normal-page .gallery img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:1px solid #2e323c;background:#1e2128;}
+#normal-page .slideshow{position:relative;width:min(680px,92vw);height:min(440px,58vh);margin:22px auto 0;border-radius:16px;overflow:hidden;border:1px solid #2e323c;background:#0c0e12;box-shadow:0 10px 40px #0008;}
+#normal-page .slide{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 2.4s ease;will-change:opacity,transform;}
+#normal-page .slide.on{opacity:1;animation:kenburns 11s ease-in-out forwards;}
+@keyframes kenburns{0%{transform:scale(1.02) translate(0,0);}100%{transform:scale(1.16) translate(-2%,-2%);}}
 
 /* RAGE MODE (wrong code) — extremely fast + loud */
 body.rage #wrapper{animation:rageshake .1s steps(2) infinite !important;}
@@ -594,6 +600,7 @@ body.rage .rainbow-text{animation-duration:.4s,.12s !important;}
 <button class="rail" id="panic">🛑 PANIC / GG</button>
 <button class="rail" id="mute">🔊 ON</button>
 <button class="rail" id="exit-btn">🔑 EXIT CODE</button>
+<div id="snd-hint">🔊 TAP / CLICK ANYWHERE FOR SOUND</div>
 
 <!-- secret password dialog: MNA-3825 normalizes the page; anything else = rage mode -->
 <div id="pw-overlay">
@@ -615,8 +622,10 @@ body.rage .rainbow-text{animation-duration:.4s,.12s !important;}
     <a href="mailto:xkostas6x@gmail.com">✉️ xkostas6x@gmail.com</a>
     <a href="tel:+306944033313">📞 +30 694 403 3313</a>
   </div>
-  <h2 class="gal-title">📷 Gallery</h2>
-  <div class="gallery" id="normal-gallery"></div>
+  <div class="slideshow" id="normal-slideshow">
+    <img class="slide" id="slideA" alt="">
+    <img class="slide" id="slideB" alt="">
+  </div>
   <p class="foot">© STELAKOSMAK — open responsibly.<br>♪ Music: “Ego Trippin’” — Lo-Fi Scientists (CC BY-NC-ND 3.0)</p>
 </div>
 
@@ -768,7 +777,7 @@ function buildAudioGraph(){
 }
 
 function scheduler(){
-  if(!ctx) return;
+  if(!ctx||!audioUnlocked) return;
   const bpm=BPM_BASE+riftDepth*BPM_RANGE, spb=60/bpm;
   while(nextNoteTime < ctx.currentTime + 0.1){
     if(riftDepth>0.18) scheduleNote(nextNoteTime, beatStep);
@@ -872,32 +881,40 @@ function audioFrame(){
 }
 
 /* ============================================================ ENTER / GATE */
-function goFullscreen(){   // can only fire from a user gesture -> the ENTER click
+function goFullscreen(){   // can only fire from a user gesture
   const el=document.documentElement;
   const fn=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;
   if(fn){ try{ const p=fn.call(el); if(p&&p.catch) p.catch(()=>{}); }catch(e){} }
 }
-function enterRift(){
+function enterRift(){   // AUTO-runs on load — no "enable sound" button needed
   if(started) return; started=true;
-  // the gate literally says "ENABLE AUDIO" -> force-unmute, ignoring any stale persisted mute
-  muted=false; try{ localStorage.removeItem('brmute'); }catch(e){} $('#mute').textContent='🔊 ON';
-  goFullscreen();                   // go fullscreen on the same ENTER click
-  chaosStart=performance.now();     // stamp the clock at ENTER (defensive; startChaos re-stamps the same instant)
+  muted=false; try{ localStorage.removeItem('brmute'); }catch(e){}
+  chaosStart=performance.now();
   document.body.classList.add('entered');
   if(calm) document.body.classList.add('calm');
+  // build the audio graph right away; browsers keep it SUSPENDED until the first interaction
   try{
     ctx = new (window.AudioContext||window.webkitAudioContext)();
-    ctx.resume().then(()=>{ buildAudioGraph(); audioUnlocked=true; blip(); loadVoices(); flashBig('DEMACIA!'); });
+    buildAudioGraph(); loadVoices();
+    ctx.resume().then(()=>{ if(ctx.state==='running'){ audioUnlocked=true; blip(); } }).catch(()=>{});
   }catch(e){ console.warn('Audio unavailable:',e); }
-  // hide gate
-  const gate=$('#gate'); gate.style.transition='opacity .5s'; gate.style.opacity='0';
-  setTimeout(()=>gate.style.display='none',500);
-  // brainrot starts IMMEDIATELY; the 99% loader is now just a quick cosmetic flash on top
+  const gate=$('#gate'); if(gate) gate.style.display='none';
   startChaos();
   runLoader();
+  armAudioUnlock();
+  flashBig('DEMACIA!');
 }
-$('#enter-btn').addEventListener('click',enterRift);
-$('#calm-link').addEventListener('click',()=>{ calm=true; enterRift(); });
+// the FIRST click/tap/key anywhere resumes audio (browser autoplay policy) + goes fullscreen — no button
+function armAudioUnlock(){
+  const unlock=()=>{
+    const h=$('#snd-hint'); if(h) h.classList.add('gone');
+    if(ctx){ ctx.resume().then(()=>{ if(ctx.state==='running'){ if(!audioUnlocked){ audioUnlocked=true; blip(); }
+      ['pointerdown','touchstart','keydown','click'].forEach(ev=>window.removeEventListener(ev,unlock,true)); } }).catch(()=>{}); }
+    goFullscreen();
+  };
+  ['pointerdown','touchstart','keydown','click'].forEach(ev=>window.addEventListener(ev,unlock,true));
+}
+enterRift();   // <-- start the brainrot immediately on load
 
 /* ============================================================ 99% LOADER */
 function runLoader(){   // quick ~1.5s cosmetic 99% gag; chaos is ALREADY running behind it
@@ -1364,7 +1381,8 @@ document.addEventListener('visibilitychange',()=>{
 });
 
 /* ===================== SECRET EXIT CODE ===================== */
-function openPw(){ const o=$('#pw-overlay'); o.classList.add('on'); const i=$('#pw-input'); i.value=''; setTimeout(()=>i.focus(),30); }
+function openPw(){ const o=$('#pw-overlay'); o.classList.add('on'); const i=$('#pw-input'); i.value=''; setTimeout(()=>i.focus(),30);
+  const lf=$('#lofi'); if(lf && lf.preload!=='auto'){ lf.preload='auto'; try{ lf.load(); }catch(e){} } }   // start buffering chill music
 function closePw(){ $('#pw-overlay').classList.remove('on'); }
 function checkPw(){
   const v=$('#pw-input').value.trim().toUpperCase().replace(/[\s\-]/g,''); closePw();  // accept MNA-3825 / MNA3825 / MNA 3825
@@ -1382,14 +1400,26 @@ function normalizePage(){
   document.body.classList.add('normal');
   buildNormalGallery();
   if(document.fullscreenElement && document.exitFullscreen){ document.exitFullscreen().catch(()=>{}); }
-  const lofi=$('#lofi'); if(lofi){ lofi.volume=0.55; try{ lofi.currentTime=0; }catch(e){} const pp=lofi.play(); if(pp&&pp.catch) pp.catch(()=>{}); }  // chill lo-fi on the normal page
+  const lofi=$('#lofi'); if(lofi){ lofi.muted=false; lofi.volume=0.55; try{ lofi.currentTime=0; }catch(e){}
+    const tryPlay=()=>{ const pp=lofi.play(); if(pp&&pp.catch) pp.catch(()=>{}); };
+    tryPlay(); document.addEventListener('pointerdown',function k(){ tryPlay(); document.removeEventListener('pointerdown',k); },{once:true}); }  // chill lo-fi; retries on next tap if blocked
   document.documentElement.style.setProperty('--intensity','0');
   document.title='STELAKOSMAK — Contact';
   window.scrollTo(0,0);
 }
-function buildNormalGallery(){
-  const g=$('#normal-gallery'); if(!g || g.childElementCount) return;
-  LOCAL_IMAGES.forEach(src=>{ const im=document.createElement('img'); im.loading='lazy'; im.alt=''; im.onerror=()=>im.remove(); im.src=encodeURI(src); g.appendChild(im); });
+let slideTimer=null, lastSlide='';
+function buildNormalGallery(){   // SLOW-MOTION random photo slideshow (Ken Burns crossfade), not a grid
+  if(slideTimer || !LOCAL_IMAGES.length) return;
+  let cur=$('#slideA'), nxt=$('#slideB'); if(!cur||!nxt) return;
+  const show=()=>{
+    let src; do{ src=pick(LOCAL_IMAGES); }while(LOCAL_IMAGES.length>1 && src===lastSlide); lastSlide=src;
+    nxt.src=encodeURI(src);
+    nxt.classList.remove('on'); void nxt.offsetWidth; nxt.classList.add('on');   // restart the slow zoom
+    cur.classList.remove('on');
+    const t=cur; cur=nxt; nxt=t;
+  };
+  show();
+  slideTimer=setInterval(show, 6000);   // slow: ~6s per photo
 }
 function rageMode(){
   if(escaped) return; rage=true;
