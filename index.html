@@ -1127,8 +1127,8 @@ function triggerSuppress(){
   function end(){ if(ended) return; ended=true;
     s.classList.remove('on'); document.body.classList.remove('stunned');
     document.documentElement.style.overflow=''; document.body.style.overflow=''; suppressActive=false; suppressEnd=null; clearTimeout(to);
-    window.removeEventListener('wheel',swallow,{capture:true});
-    window.removeEventListener('touchmove',swallow,{capture:true});
+    window.removeEventListener('wheel',swallow,{passive:false,capture:true});
+    window.removeEventListener('touchmove',swallow,{passive:false,capture:true});
     window.removeEventListener('keydown',keyguard,true);
   }
   suppressEnd=end;
