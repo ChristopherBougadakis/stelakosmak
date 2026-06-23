@@ -308,7 +308,7 @@ body.stunned #fx-swarm,body.stunned #fx-rain,body.stunned #fx-words{filter:grays
 .rail{position:fixed;z-index:10001;font-family:Impact,sans-serif;border:3px solid #fff;border-radius:8px;cursor:pointer;
   padding:10px 14px;font-size:15px;box-shadow:0 0 12px #000;}
 #panic{bottom:12px;left:12px;background:#ff004d;color:#fff;}
-#mute{bottom:12px;left:140px;background:#111;color:#0ff;}
+#mute{display:none !important;}   /* no mute during the brainrot — it is NEVER muted; only the password normal-page is silent */
 #depthHUD{top:8px;left:8px;z-index:10001;font-family:Impact,sans-serif;font-size:12px;color:#0f0;background:#000a;padding:4px 8px;border-radius:4px;pointer-events:none;}
 
 /* fake right-click menu */
@@ -347,6 +347,9 @@ body.normal .rail,body.normal .toast-wrap,body.normal #ctxmenu,body.normal #load
 #normal-page .contact a{display:block;margin:10px 0;font-size:18px;color:#4ea1ff;text-decoration:none;}
 #normal-page .contact a:hover{text-decoration:underline;}
 #normal-page .foot{color:#5a6472;font-size:12px;margin-top:18px;}
+#normal-page .gal-title{color:#fff;margin:24px 0 0;font-size:20px;}
+#normal-page .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;max-width:760px;width:100%;margin:14px auto 0;}
+#normal-page .gallery img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:1px solid #2e323c;background:#1e2128;}
 
 /* RAGE MODE (wrong code) — extremely fast + loud */
 body.rage #wrapper{animation:rageshake .1s steps(2) infinite !important;}
@@ -612,8 +615,13 @@ body.rage .rainbow-text{animation-duration:.4s,.12s !important;}
     <a href="mailto:xkostas6x@gmail.com">✉️ xkostas6x@gmail.com</a>
     <a href="tel:+306944033313">📞 +30 694 403 3313</a>
   </div>
-  <p class="foot">© STELAKOSMAK — open responsibly.</p>
+  <h2 class="gal-title">📷 Gallery</h2>
+  <div class="gallery" id="normal-gallery"></div>
+  <p class="foot">© STELAKOSMAK — open responsibly.<br>♪ Music: “Ego Trippin’” — Lo-Fi Scientists (CC BY-NC-ND 3.0)</p>
 </div>
+
+<!-- lo-fi music for the normal page (source: archive.org/details/DWK044). SWAP ME -> any .mp3 -->
+<audio id="lofi" loop preload="none" src="lofi.mp3"></audio>
 
 <script>
 /* ============================================================================
@@ -864,10 +872,16 @@ function audioFrame(){
 }
 
 /* ============================================================ ENTER / GATE */
+function goFullscreen(){   // can only fire from a user gesture -> the ENTER click
+  const el=document.documentElement;
+  const fn=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;
+  if(fn){ try{ const p=fn.call(el); if(p&&p.catch) p.catch(()=>{}); }catch(e){} }
+}
 function enterRift(){
   if(started) return; started=true;
   // the gate literally says "ENABLE AUDIO" -> force-unmute, ignoring any stale persisted mute
   muted=false; try{ localStorage.removeItem('brmute'); }catch(e){} $('#mute').textContent='🔊 ON';
+  goFullscreen();                   // go fullscreen on the same ENTER click
   chaosStart=performance.now();     // stamp the clock at ENTER (defensive; startChaos re-stamps the same instant)
   document.body.classList.add('entered');
   if(calm) document.body.classList.add('calm');
@@ -1323,12 +1337,7 @@ function panic(){
   $('#ctxmenu').classList.remove('on');
   toast('GG. /ff');
 }
-$('#mute').addEventListener('click',()=>{
-  muted=!muted; localStorage.setItem('brmute',muted?'1':'0');
-  $('#mute').textContent=muted?'🔇 OFF':'🔊 ON';
-  if(ctx&&masterGain){ masterGain.gain.cancelScheduledValues(ctx.currentTime); masterGain.gain.setTargetAtTime(targetMaster(),ctx.currentTime,0.05); }
-});
-$('#mute').textContent = muted?'🔇 OFF':'🔊 ON';
+/* mute button removed from the brainrot — audio is NEVER muted here; only the password normal-page is silent */
 window.addEventListener('keydown',e=>{ if(e.key==='Escape') panic(); });
 window.addEventListener('pagehide',()=>{ if(schedTimer) clearInterval(schedTimer); });
 
@@ -1358,8 +1367,8 @@ document.addEventListener('visibilitychange',()=>{
 function openPw(){ const o=$('#pw-overlay'); o.classList.add('on'); const i=$('#pw-input'); i.value=''; setTimeout(()=>i.focus(),30); }
 function closePw(){ $('#pw-overlay').classList.remove('on'); }
 function checkPw(){
-  const v=$('#pw-input').value.trim().toUpperCase(); closePw();
-  if(v==='MNA-3825') normalizePage();   // correct => page becomes a normal contact page, brainrot gone
+  const v=$('#pw-input').value.trim().toUpperCase().replace(/[\s\-]/g,''); closePw();  // accept MNA-3825 / MNA3825 / MNA 3825
+  if(v==='MNA3825') normalizePage();    // correct => normal contact + photo gallery page, brainrot gone
   else rageMode();                      // wrong   => brainrot becomes EXTREMELY fast + loud
 }
 function normalizePage(){
@@ -1371,9 +1380,16 @@ function normalizePage(){
   panic();                                             // clears popups/overlays/stun
   document.body.classList.remove('demacia-quake','crunch','tier-meltdown','tier-fried','tier-spicy','rage','tier-calm');
   document.body.classList.add('normal');
+  buildNormalGallery();
+  if(document.fullscreenElement && document.exitFullscreen){ document.exitFullscreen().catch(()=>{}); }
+  const lofi=$('#lofi'); if(lofi){ lofi.volume=0.55; try{ lofi.currentTime=0; }catch(e){} const pp=lofi.play(); if(pp&&pp.catch) pp.catch(()=>{}); }  // chill lo-fi on the normal page
   document.documentElement.style.setProperty('--intensity','0');
   document.title='STELAKOSMAK — Contact';
   window.scrollTo(0,0);
+}
+function buildNormalGallery(){
+  const g=$('#normal-gallery'); if(!g || g.childElementCount) return;
+  LOCAL_IMAGES.forEach(src=>{ const im=document.createElement('img'); im.loading='lazy'; im.alt=''; im.onerror=()=>im.remove(); im.src=encodeURI(src); g.appendChild(im); });
 }
 function rageMode(){
   if(escaped) return; rage=true;
